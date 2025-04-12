@@ -1,6 +1,6 @@
 #include "V2.h"
 
-V2::V2() : x(0), y(0) {}
+V2::V2() : x(0.0f), y(0.0f) {}
 
 V2::V2(f32 value) : x(value), y(value) {}
 

@@ -131,7 +131,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Utils.h" />
-    <ClInclude Include="GraphicsContext.h" />
+    <ClInclude Include="GlobalContext.h" />
     <ClInclude Include="M4.h" />
     <ClInclude Include="Typedefs.h" />
     <ClInclude Include="V2.h" />
@@ -139,7 +139,7 @@
     <ClInclude Include="V4.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GraphicsContext.cpp" />
+    <ClCompile Include="GlobalContext.cpp" />
     <ClCompile Include="M4.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="V2.cpp" />

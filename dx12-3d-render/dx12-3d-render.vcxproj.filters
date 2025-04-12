@@ -18,7 +18,7 @@
     <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsContext.h">
+    <ClInclude Include="GlobalContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="M4.h">
@@ -41,7 +41,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicsContext.cpp">
+    <ClCompile Include="GlobalContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="M4.cpp">

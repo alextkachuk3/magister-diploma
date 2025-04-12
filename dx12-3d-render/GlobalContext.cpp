@@ -1,26 +1,26 @@
-#include "GraphicsContext.h"
+#include "GlobalContext.h"
 
-GraphicsContext::GraphicsContext()
-	: windowHandle(nullptr),
-	deviceContext(nullptr),
-	frameBufferWidth(0),
-	frameBufferHeight(0),
-	frameBufferPixels(nullptr),
-	zBuffer(nullptr),
-	isRunning(false)
+static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	switch (message)
+	{
+	case WM_DESTROY:
+	case WM_CLOSE:
+		GlobalContext::Stop();
+		return 0;
+	default:
+		return DefWindowProcA(windowHandle, message, wParam, lParam);
+	}
 }
 
-GraphicsContext::~GraphicsContext()
-{
-	ReleaseResources();
-}
+const f32 GlobalContext::pi(std::numbers::pi_v<f32>);
+bool GlobalContext::isRunning(false);
 
-void GraphicsContext::Initialize(HINSTANCE hInstance, const char* windowTitle, int width, int height, WNDPROC windowCallback = DefWindowProcA)
+GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height)
 {
 	WNDCLASSA windowClass = {};
 	windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-	windowClass.lpfnWndProc = windowCallback;
+	windowClass.lpfnWndProc = Win32WindowCallBack;
 	windowClass.hInstance = hInstance;
 	windowClass.lpszClassName = windowTitle;
 
@@ -35,10 +35,10 @@ void GraphicsContext::Initialize(HINSTANCE hInstance, const char* windowTitle, i
 		CW_USEDEFAULT,
 		width,
 		height,
-		NULL,
-		NULL,
+		nullptr,
+		nullptr,
 		hInstance,
-		NULL);
+		nullptr);
 
 	if (!windowHandle) AssertMsg("Failed to create window");
 
@@ -53,7 +53,131 @@ void GraphicsContext::Initialize(HINSTANCE hInstance, const char* windowTitle, i
 	zBuffer = new f32[frameBufferWidth * frameBufferHeight];
 }
 
-void GraphicsContext::ReleaseResources()
+GlobalContext::~GlobalContext()
+{
+	ReleaseResources();
+}
+
+void GlobalContext::Run()
+{
+	isRunning = true;
+
+	LARGE_INTEGER timerFrequency;
+	QueryPerformanceFrequency(&timerFrequency);
+
+	LARGE_INTEGER beginTime;
+	QueryPerformanceCounter(&beginTime);
+
+	const f32 speed = 0.75f;
+	f32 currentTime = -2.0f * pi;
+
+	while (isRunning)
+	{
+		LARGE_INTEGER endTime;
+		QueryPerformanceCounter(&endTime);
+		f32 frameTime = (f32)(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
+		beginTime = endTime;
+
+		char frameTimeMessage[64];
+		snprintf(frameTimeMessage, sizeof(frameTimeMessage), "FrameTime: %f\n", frameTime);
+		OutputDebugStringA(frameTimeMessage);
+
+		for (u32 y = 0; y < frameBufferHeight; y++)
+		{
+			for (u32 x = 0; x < frameBufferWidth; x++)
+			{
+				u8 red = 0;
+				u8 green = 0;
+				u8 blue = 0;
+				u8 alpha = 255;
+				u32 color = ((u32)alpha << 24) | ((u32)red << 16) | ((u32)green << 8) | (u32)blue;
+
+				u32 pixelIndex = y * frameBufferWidth + x;
+				frameBufferPixels[pixelIndex] = color;
+				zBuffer[pixelIndex] = FLT_MAX;
+			}
+		}
+
+		currentTime += frameTime * speed;
+		if (currentTime > 2.0f * pi)
+		{
+			currentTime -= 2.0f * pi;
+		}
+
+		V3 ModelVertices[] =
+		{
+			V3(-0.5f, -0.5f, -0.5f),
+			V3(-0.5f, 0.5f, -0.5f),
+			V3(0.5f, 0.5f, -0.5f),
+			V3(0.5f, -0.5f, -0.5f),
+			V3(-0.5f, -0.5f, 0.5f),
+			V3(-0.5f, 0.5f, 0.5f),
+			V3(0.5f, 0.5f, 0.5f),
+			V3(0.5f, -0.5f, 0.5f),
+		};
+
+		V3 ModelColors[] =
+		{
+			V3(1, 0, 0),
+			V3(0, 0, 1),
+			V3(0.2f, 0.8f, 0.2f),
+			V3(1, 0, 1),
+			V3(1, 1, 0),
+			V3(1, 0.5f, 0),
+			V3(0.5f, 0, 0.5f),
+			V3(0.2f, 0.2f, 1),
+		};
+
+		u32 ModelIndices[] =
+		{
+			0, 1, 2,
+			2, 3, 0,
+
+			6, 5, 4,
+			4, 7, 6,
+
+			4, 5, 1,
+			1, 0, 4,
+
+			3, 2, 6,
+			6, 7, 3,
+
+			1, 5, 6,
+			6, 2, 1,
+
+			4, 0, 3,
+			3, 7, 4,
+		};
+
+		M4 transform = (M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
+
+		for (u32 i = 0; i < 36; i += 3)
+		{
+			u32 Index0 = ModelIndices[i + 0];
+			u32 Index1 = ModelIndices[i + 1];
+			u32 Index2 = ModelIndices[i + 2];
+
+			DrawTriangle(ModelVertices[Index0], ModelVertices[Index1], ModelVertices[Index2],
+				ModelColors[Index0], ModelColors[Index1], ModelColors[Index2],
+				transform);
+		}
+
+		ProcessSystemMessages();
+		if (!isRunning)
+		{
+			break;
+		}
+
+		RenderFrame();
+	}
+}
+
+void GlobalContext::Stop()
+{
+	isRunning = false;
+}
+
+void GlobalContext::ReleaseResources()
 {
 	if (deviceContext && windowHandle)
 		ReleaseDC(windowHandle, deviceContext);
@@ -69,13 +193,15 @@ void GraphicsContext::ReleaseResources()
 	}
 }
 
-void GraphicsContext::ProcessSystemMessages()
+void GlobalContext::ProcessSystemMessages()
 {
 	MSG message;
 	while (PeekMessageA(&message, windowHandle, 0, 0, PM_REMOVE))
 	{
 		if (message.message == WM_QUIT)
-			SetIsRunning(false);
+		{
+			isRunning = false;
+		}
 		else
 		{
 			TranslateMessage(&message);
@@ -84,7 +210,7 @@ void GraphicsContext::ProcessSystemMessages()
 	}
 }
 
-void GraphicsContext::RenderFrame() const
+void GlobalContext::RenderFrame() const
 {
 	RECT clientRect = {};
 	Assert(GetClientRect(windowHandle, &clientRect));
@@ -112,12 +238,12 @@ void GraphicsContext::RenderFrame() const
 	));
 }
 
-V2 GraphicsContext::ProjectPoint(V3 pos) const
+V2 GlobalContext::ProjectPoint(V3 pos) const
 {
 	return 0.5f * (pos.xy / pos.z + V2(1.0f)) * V2((f32)GetFrameBufferWidth(), (f32)GetFrameBufferHeight());
 }
 
-void GraphicsContext::DrawTriangle(const V3* points, const V3* colors) const
+void GlobalContext::DrawTriangle(const V3* points, const V3* colors) const
 {
 	V2 pointA = ProjectPoint(points[0]);
 	V2 pointB = ProjectPoint(points[1]);
@@ -193,7 +319,7 @@ void GraphicsContext::DrawTriangle(const V3* points, const V3* colors) const
 	}
 }
 
-void GraphicsContext::DrawTriangle(V3 modelVertex0, V3 modelVertex1, V3 modelVertex2, V3 modelColor0, V3 modelColor1, V3 modelColor2, M4 transform) const
+void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V3& modelColor0, const V3& modelColor1, const V3& modelColor2, const M4& transform) const
 {
 	V3 transformedPoint0 = (transform * V4(modelVertex0, 1.0f)).xyz;
 	V3 transformedPoint1 = (transform * V4(modelVertex1, 1.0f)).xyz;
@@ -273,62 +399,52 @@ void GraphicsContext::DrawTriangle(V3 modelVertex0, V3 modelVertex1, V3 modelVer
 	}
 }
 
-HWND GraphicsContext::GetWindowHandle() const
+HWND GlobalContext::GetWindowHandle() const
 {
 	return windowHandle;
 }
 
-void GraphicsContext::SetWindowHandle(HWND handle)
+void GlobalContext::SetWindowHandle(HWND handle)
 {
 	windowHandle = handle;
 }
 
-HDC GraphicsContext::GetDeviceContext() const
+HDC GlobalContext::GetDeviceContext() const
 {
 	return deviceContext;
 }
 
-void GraphicsContext::SetDeviceContext(HDC context)
+void GlobalContext::SetDeviceContext(HDC context)
 {
 	deviceContext = context;
 }
 
-u32 GraphicsContext::GetFrameBufferWidth() const
+u32 GlobalContext::GetFrameBufferWidth() const
 {
 	return frameBufferWidth;
 }
 
-void GraphicsContext::SetFrameBufferWidth(u32 width)
+void GlobalContext::SetFrameBufferWidth(u32 width)
 {
 	frameBufferWidth = width;
 }
 
-u32 GraphicsContext::GetFrameBufferHeight() const
+u32 GlobalContext::GetFrameBufferHeight() const
 {
 	return frameBufferHeight;
 }
 
-void GraphicsContext::SetFrameBufferHeight(u32 height)
+void GlobalContext::SetFrameBufferHeight(u32 height)
 {
 	frameBufferHeight = height;
 }
 
-u32* GraphicsContext::GetFrameBufferPixels() const
+u32* GlobalContext::GetFrameBufferPixels() const
 {
 	return frameBufferPixels;
 }
 
-f32* GraphicsContext::GetZBuffer() const
+f32* GlobalContext::GetZBuffer() const
 {
 	return zBuffer;
-}
-
-bool GraphicsContext::IsRunning() const
-{
-	return isRunning;
-}
-
-void GraphicsContext::SetIsRunning(bool running)
-{
-	isRunning = running;
 }

@@ -5,23 +5,27 @@ union V3
 {
 	struct
 	{
-		f32 x, y, z;
+		f32 x;
+		f32 y;
+		f32 z;
 	};
 
 	struct
 	{
-		f32 r, g, b;
+		f32 r;
+		f32 g;
+		f32 b;
 	};
 
 	struct
 	{
 		V2 xy;
-		f32 Ignored0;
+		f32 ignored_0;
 	};
 
 	struct
 	{
-		float Ignored1;
+		f32 ignored_1;
 		V2 yz;
 	};
 
