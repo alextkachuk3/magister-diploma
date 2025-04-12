@@ -126,10 +126,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AssertUtils.h" />
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="GraphicsContext.h" />
     <ClInclude Include="M4.h" />
     <ClInclude Include="Typedefs.h" />
@@ -139,7 +140,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GraphicsContext.cpp" />
+    <ClCompile Include="M4.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="V2.cpp" />
+    <ClCompile Include="V3.cpp" />
+    <ClCompile Include="V4.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

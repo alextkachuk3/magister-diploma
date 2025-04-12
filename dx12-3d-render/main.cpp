@@ -1,7 +1,7 @@
 ﻿#include <Windows.h>
 #include <cmath>
 #include <vector>
-#include "AssertUtils.h"
+#include "Utils.h"
 #include "GraphicsContext.h"
 #include "V2.h"
 #include "V3.h"
@@ -45,6 +45,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		QueryPerformanceCounter(&endTime);
 		f32 frameTime = (f32)(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
 		beginTime = endTime;
+
+        char frameTimeMessage[64];
+        snprintf(frameTimeMessage, sizeof(frameTimeMessage), "FrameTime: %f\n", frameTime);
+        OutputDebugStringA(frameTimeMessage);
 
 		u32* pixels = graphicsContext.GetFrameBufferPixels();
 		f32* zBuffer = graphicsContext.GetZBuffer();

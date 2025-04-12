@@ -24,7 +24,7 @@ void GraphicsContext::Initialize(HINSTANCE hInstance, const char* windowTitle, i
 	windowClass.hInstance = hInstance;
 	windowClass.lpszClassName = windowTitle;
 
-	if (!RegisterClassA(&windowClass)) InvalidCodePath;
+	if (!RegisterClassA(&windowClass)) AssertMsg("Failed to register class!");
 
 	windowHandle = CreateWindowExA(
 		0,
@@ -40,12 +40,12 @@ void GraphicsContext::Initialize(HINSTANCE hInstance, const char* windowTitle, i
 		hInstance,
 		NULL);
 
-	if (!windowHandle) InvalidCodePath;
+	if (!windowHandle) AssertMsg("Failed to create window");
 
 	deviceContext = GetDC(windowHandle);
 
 	RECT clientRect;
-	GetClientRect(windowHandle, &clientRect);
+	Assert(GetClientRect(windowHandle, &clientRect));
 	frameBufferWidth = clientRect.right - clientRect.left;
 	frameBufferHeight = clientRect.bottom - clientRect.top;
 
