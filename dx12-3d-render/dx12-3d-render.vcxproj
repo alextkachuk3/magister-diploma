@@ -130,6 +130,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="GlobalContext.h" />
     <ClInclude Include="M4.h" />
@@ -139,6 +140,7 @@
     <ClInclude Include="V4.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GlobalContext.cpp" />
     <ClCompile Include="M4.cpp" />
     <ClCompile Include="main.cpp" />

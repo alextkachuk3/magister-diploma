@@ -10,6 +10,7 @@
 #include "V3.h"
 #include "V4.h"
 #include "M4.h"
+#include "Camera.h"
 
 class GlobalContext
 {
@@ -20,8 +21,15 @@ private:
 	u32 frameBufferHeight;
 	u32* frameBufferPixels;
 	f32* zBuffer;
-	static bool isRunning;
 
+	bool wDown = false;
+	bool aDown = false;
+	bool sDown = false;
+	bool dDown = false;
+
+	Camera camera;
+
+	static bool isRunning;
 	static const f32 pi;
 
 public:

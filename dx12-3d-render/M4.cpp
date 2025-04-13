@@ -20,7 +20,7 @@ M4 M4::Identity()
 	);
 }
 
-M4 M4::Scale(f32 X, f32 Y, f32 Z)
+M4 M4::Scale(const f32 X, const f32 Y, const f32 Z)
 {
 	return M4(
 		V4(X, 0.0f, 0.0f, 0.0f),
@@ -30,7 +30,7 @@ M4 M4::Scale(f32 X, f32 Y, f32 Z)
 	);
 }
 
-M4 M4::Rotation(f32 X, f32 Y, f32 Z)
+M4 M4::Rotation(const f32 X, const f32 Y, const f32 Z)
 {
 	M4 RotateX(
 		V4(1.0f, 0.0f, 0.0f, 0.0f),
@@ -56,7 +56,7 @@ M4 M4::Rotation(f32 X, f32 Y, f32 Z)
 	return RotateZ * RotateY * RotateX;
 }
 
-M4 M4::Translation(f32 X, f32 Y, f32 Z)
+M4 M4::Translation(const f32 X, const f32 Y, const f32 Z)
 {
 	return M4(
 		V4(1.0f, 0.0f, 0.0f, 0.0f),
@@ -64,6 +64,11 @@ M4 M4::Translation(f32 X, f32 Y, f32 Z)
 		V4(0.0f, 0.0f, 1.0f, 0.0f),
 		V4(X, Y, Z, 1.0f)
 	);
+}
+
+M4 M4::Translation(const V3& A)
+{
+	return Translation(A.x, A.y, A.z);
 }
 
 V4 M4::operator*(const V4& B) const

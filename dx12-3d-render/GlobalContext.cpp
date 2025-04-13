@@ -30,7 +30,7 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 		0,
 		windowClass.lpszClassName,
 		windowTitle,
-		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+		WS_POPUP | WS_VISIBLE,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
 		width,
@@ -149,7 +149,7 @@ void GlobalContext::Run()
 			3, 7, 4,
 		};
 
-		M4 transform = (M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
+		M4 transform = (camera.getTranlationMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
 
 		for (u32 i = 0; i < 36; i += 3)
 		{
@@ -162,12 +162,26 @@ void GlobalContext::Run()
 				transform);
 		}
 
-		ProcessSystemMessages();
-		if (!isRunning)
+		M4 cameraTransform = M4::Identity();
+
+		if (wDown)
 		{
-			break;
+			camera.move(V3::LookAt() * frameTime);
+		}
+		if (aDown)
+		{
+			camera.moveReverse(V3::Right() * frameTime);
+		}
+		if (sDown)
+		{
+			camera.moveReverse(V3::LookAt() * frameTime);
+		}
+		if (dDown)
+		{
+			camera.move(V3::Right() * frameTime);
 		}
 
+		ProcessSystemMessages();
 		RenderFrame();
 	}
 }
@@ -196,16 +210,68 @@ void GlobalContext::ReleaseResources()
 void GlobalContext::ProcessSystemMessages()
 {
 	MSG message;
-	while (PeekMessageA(&message, windowHandle, 0, 0, PM_REMOVE))
+	while (PeekMessageW(&message, windowHandle, 0, 0, PM_REMOVE))
 	{
-		if (message.message == WM_QUIT)
+		switch (message.message)
+		{
+		case WM_QUIT:
 		{
 			isRunning = false;
+			break;
 		}
-		else
+		case WM_KEYDOWN:
+		{
+			u64 keyCode = message.wParam;
+			bool isDown = !((message.lParam >> 31) & 0x1);
+
+			switch (keyCode)
+			{
+			case 'W':
+				wDown = isDown;
+				break;
+			case 'A':
+				aDown = isDown;
+				break;
+			case 'S':
+				sDown = isDown;
+				break;
+			case 'D':
+				dDown = isDown;
+				break;
+			default:
+				break;
+			}
+			break;
+		}
+		case WM_KEYUP:
+		{
+			u64 keyCode = message.wParam;
+
+			switch (keyCode)
+			{
+			case 'W':
+				wDown = false;
+				break;
+			case 'A':
+				aDown = false;
+				break;
+			case 'S':
+				sDown = false;
+				break;
+			case 'D':
+				dDown = false;
+				break;
+			default:
+				break;
+			}
+			break;
+		}
+		default:
 		{
 			TranslateMessage(&message);
-			DispatchMessageA(&message);
+			DispatchMessageW(&message);
+			break;
+		}
 		}
 	}
 }

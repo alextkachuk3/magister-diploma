@@ -12,9 +12,10 @@ union M4
 	M4(const V4& row0, const V4& row1, const V4& row2, const V4& row3);
 
 	static M4 Identity();
-	static M4 Scale(f32 X, f32 Y, f32 Z);
-	static M4 Rotation(f32 X, f32 Y, f32 Z);
-	static M4 Translation(f32 X, f32 Y, f32 Z);
+	static M4 Scale(const f32 X, const f32 Y, const f32 Z);
+	static M4 Rotation(const f32 X, const f32 Y, const f32 Z);
+	static M4 Translation(const f32 X, const f32 Y, const f32 Z);
+	static M4 Translation(const V3& A);
 
 	V4 operator*(const V4& B) const;
 	M4 operator*(const M4& B) const;
