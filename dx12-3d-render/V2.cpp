@@ -2,9 +2,9 @@
 
 V2::V2() : x(0.0f), y(0.0f) {}
 
-V2::V2(f32 value) : x(value), y(value) {}
+V2::V2(const f32 value) : x(value), y(value) {}
 
-V2::V2(f32 X, f32 Y) : x(X), y(Y) {}
+V2::V2(const f32 X, const f32 Y) : x(X), y(Y) {}
 
 V2 V2::operator+(const V2& other) const
 {

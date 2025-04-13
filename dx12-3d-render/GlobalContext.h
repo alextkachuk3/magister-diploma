@@ -22,10 +22,11 @@ private:
 	u32* frameBufferPixels;
 	f32* zBuffer;
 
-	bool wDown = false;
-	bool aDown = false;
-	bool sDown = false;
-	bool dDown = false;
+	bool wButtonPressed = false;
+	bool aButtonPressed = false;
+	bool sButtonPressed = false;
+	bool dButtonPressed = false;
+	bool leftMouseButtonPressed = false;
 
 	Camera camera;
 

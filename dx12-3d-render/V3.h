@@ -1,4 +1,5 @@
 #pragma once
+#include <math.h>
 #include "v2.h"
 
 union V3
@@ -37,7 +38,8 @@ union V3
 	V3 operator-() const;
 	V3 operator+(const V3& other) const;
 	V3 operator-(const V3& other) const;
-	V3 operator*(f32 scalar) const;
+	V3 operator*(const f32 scalar) const;
+	V3 operator/(const f32 scalar) const;
 	V3& operator+=(const V3& other);
 	V3& operator-=(const V3& other);
 
@@ -46,6 +48,5 @@ union V3
 	V2 getXY() const;
 	V2 getYZ() const;
 
-	static V3 Right();
-	static V3 LookAt();
+	static V3 Normalize(const V3& A);
 };

@@ -149,7 +149,7 @@ void GlobalContext::Run()
 			3, 7, 4,
 		};
 
-		M4 transform = (camera.getTranlationMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
+		M4 transform = (camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
 
 		for (u32 i = 0; i < 36; i += 3)
 		{
@@ -162,24 +162,81 @@ void GlobalContext::Run()
 				transform);
 		}
 
-		M4 cameraTransform = M4::Identity();
+		bool mousePressed = false;
+		V2 currentMousePosition;
 
-		if (wDown)
+		if (GetActiveWindow() == windowHandle)
 		{
-			camera.move(V3::LookAt() * frameTime);
+			POINT Win32MousePos = {};
+			Assert(GetCursorPos(&Win32MousePos));
+			Assert(ScreenToClient(windowHandle, &Win32MousePos));
+
+			RECT ClientRect = {};
+			Assert(GetClientRect(windowHandle, &ClientRect));
+
+			Win32MousePos.y = ClientRect.bottom - Win32MousePos.y;
+
+			currentMousePosition.x = f32(Win32MousePos.x) / f32(ClientRect.right - ClientRect.left);
+			currentMousePosition.y = f32(Win32MousePos.y) / f32(ClientRect.bottom - ClientRect.top);
+
+			mousePressed = (GetKeyState(VK_LBUTTON) & 0x80) != 0;
 		}
-		if (aDown)
+
+		if (mousePressed)
 		{
-			camera.moveReverse(V3::Right() * frameTime);
+			if (!camera.getPreviousMousePressed())
+			{
+				camera.setPreviousMousePosition(currentMousePosition);
+			}
+
+			V2 mouseDelta = currentMousePosition - camera.getPreviousMousePosition();
+			camera.movePitch(mouseDelta.y);
+			camera.moveYaw(mouseDelta.x);
+			camera.setPreviousMousePosition(currentMousePosition);
 		}
-		if (sDown)
+
+		camera.setPreviousMousePressed(mousePressed);
+
+		M4 yawTransform = M4::Rotation(0.0f, camera.getYaw(), 0.0f);
+		M4 pitchTransform = M4::Rotation(camera.getPitch(), 0.0f, 0.0f);
+		M4 cameraAxisTransform = yawTransform * pitchTransform;
+
+		V3 right = V3::Normalize((cameraAxisTransform * V4(1.0f, 0.0f, 0.0f, 0.0f)).xyz);
+		V3 up = V3::Normalize((cameraAxisTransform * V4(0.0f, 1.0f, 0.0f, 0.0f)).xyz);
+		V3 lookAt = V3::Normalize((cameraAxisTransform * V4(0.0f, 0.0f, 1.0f, 0.0f)).xyz);
+
+		M4 cameraViewTransform = M4::Identity();
+
+		cameraViewTransform.v[0].x = right.x;
+		cameraViewTransform.v[1].x = right.y;
+		cameraViewTransform.v[2].x = right.z;
+
+		cameraViewTransform.v[0].y = up.x;
+		cameraViewTransform.v[1].y = up.y;
+		cameraViewTransform.v[2].y = up.z;
+
+		cameraViewTransform.v[0].z = lookAt.x;
+		cameraViewTransform.v[1].z = lookAt.y;
+		cameraViewTransform.v[2].z = lookAt.z;
+
+		if (wButtonPressed)
 		{
-			camera.moveReverse(V3::LookAt() * frameTime);
+			camera.move(lookAt * frameTime);
 		}
-		if (dDown)
+		if (aButtonPressed)
 		{
-			camera.move(V3::Right() * frameTime);
+			camera.moveReverse(right * frameTime);
 		}
+		if (sButtonPressed)
+		{
+			camera.moveReverse(lookAt * frameTime);
+		}
+		if (dButtonPressed)
+		{
+			camera.move(right * frameTime);
+		}
+
+		camera.setCameraViewTransform(cameraViewTransform);
 
 		ProcessSystemMessages();
 		RenderFrame();
@@ -221,22 +278,25 @@ void GlobalContext::ProcessSystemMessages()
 		}
 		case WM_KEYDOWN:
 		{
-			u64 keyCode = message.wParam;
-			bool isDown = !((message.lParam >> 31) & 0x1);
-
-			switch (keyCode)
+			switch (message.wParam)
 			{
 			case 'W':
-				wDown = isDown;
+				wButtonPressed = true;
 				break;
 			case 'A':
-				aDown = isDown;
+				aButtonPressed = true;
 				break;
 			case 'S':
-				sDown = isDown;
+				sButtonPressed = true;
 				break;
 			case 'D':
-				dDown = isDown;
+				dButtonPressed = true;
+				break;
+			//case VK_LBUTTON:
+			//	leftMouseButtonPressed = true;
+			//	break;
+			case VK_ESCAPE:
+				isRunning = false;
 				break;
 			default:
 				break;
@@ -245,22 +305,23 @@ void GlobalContext::ProcessSystemMessages()
 		}
 		case WM_KEYUP:
 		{
-			u64 keyCode = message.wParam;
-
-			switch (keyCode)
+			switch (message.wParam)
 			{
 			case 'W':
-				wDown = false;
+				wButtonPressed = false;
 				break;
 			case 'A':
-				aDown = false;
+				aButtonPressed = false;
 				break;
 			case 'S':
-				sDown = false;
+				sButtonPressed = false;
 				break;
 			case 'D':
-				dDown = false;
+				dButtonPressed = false;
 				break;
+			//case VK_LBUTTON:
+			//	leftMouseButtonPressed = false;
+			//	break;
 			default:
 				break;
 			}

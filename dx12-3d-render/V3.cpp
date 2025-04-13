@@ -19,9 +19,14 @@ V3 V3::operator-(const V3& other) const
 	return V3(x - other.x, y - other.y, z - other.z);
 }
 
-V3 V3::operator*(f32 scalar) const
+V3 V3::operator*(const f32 scalar) const
 {
 	return V3(x * scalar, y * scalar, z * scalar);
+}
+
+V3 V3::operator/(const f32 scalar) const
+{
+	return V3(x / scalar, y / scalar, z / scalar);
 }
 
 V3& V3::operator+=(const V3& other)
@@ -55,12 +60,8 @@ V2 V3::getYZ() const
 	return V2(y, z);
 }
 
-V3 V3::Right()
+V3 V3::Normalize(const V3& A)
 {
-	return V3(1.0f, 0.0f, 0.0f);
-}
-
-V3 V3::LookAt()
-{
-	return V3(0.0f, 0.0f, 1.0f);
+	f32 length = sqrtf(A.x * A.x + A.y * A.y + A.z * A.z);
+	return A / length;
 }

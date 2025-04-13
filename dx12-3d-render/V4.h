@@ -28,8 +28,8 @@ union V4
 	float e[4];
 
 	V4();
-	V4(f32 X, f32 Y, f32 Z, f32 W);
-	V4(V3 v3, f32 W);
+	V4(const f32 X, const f32 Y, const f32 Z, const f32 W);
+	V4(const V3& v3, const f32 W);
 
 	V4 operator+(const V4& B) const;
 	V4 operator*(const f32 B) const;
