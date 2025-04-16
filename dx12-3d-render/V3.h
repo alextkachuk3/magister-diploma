@@ -42,6 +42,7 @@ union V3
 	V3 operator/(const f32 scalar) const;
 	V3& operator+=(const V3& other);
 	V3& operator-=(const V3& other);
+	V3& operator/=(const f32 scalar);
 
 	friend V3 operator*(f32 scalar, const V3& v3);
 

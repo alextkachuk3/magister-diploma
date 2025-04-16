@@ -150,7 +150,7 @@ void GlobalContext::Run()
 			3, 7, 4,
 		};
 
-		M4 transform = (M4::Perspective(aspectRatio, 1.05f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
+		M4 transform = (M4::Perspective(aspectRatio, 1.4f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
 
 		for (u32 i = 0; i < 36; i += 3)
 		{
@@ -361,96 +361,24 @@ void GlobalContext::RenderFrame() const
 	));
 }
 
-V2 GlobalContext::ProjectPoint(V3 pos) const
+V2 GlobalContext::NdcToBufferCoordinates(V2 NdcPoint) const
 {
-	return 0.5f * (pos.xy / pos.z + V2(1.0f)) * V2((f32)GetFrameBufferWidth(), (f32)GetFrameBufferHeight());
-}
-
-void GlobalContext::DrawTriangle(const V3* points, const V3* colors) const
-{
-	V2 pointA = ProjectPoint(points[0]);
-	V2 pointB = ProjectPoint(points[1]);
-	V2 pointC = ProjectPoint(points[2]);
-
-	i32 minX = (i32)min(min(pointA.x, pointB.x), pointC.x);
-	i32 maxX = (i32)ceil(max(max(pointA.x, pointB.x), pointC.x));
-	i32 minY = (i32)min(min(pointA.y, pointB.y), pointC.y);
-	i32 maxY = (i32)ceil(max(max(pointA.y, pointB.y), pointC.y));
-
-	minX = std::clamp(minX, 0, (i32)frameBufferWidth - 1);
-	maxX = std::clamp(maxX, 0, (i32)frameBufferWidth - 1);
-	minY = std::clamp(minY, 0, (i32)frameBufferHeight - 1);
-	maxY = std::clamp(maxY, 0, (i32)frameBufferHeight - 1);
-
-	V2 edges[] =
-	{
-		pointB - pointA,
-		pointC - pointB,
-		pointA - pointC
-	};
-
-	bool isTopLeft[] =
-	{
-		(edges[0].x >= 0.0f && edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),
-		(edges[1].x >= 0.0f && edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),
-		(edges[2].x >= 0.0f && edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)
-	};
-
-	f32 barycentricDiv = V2::CrossProduct(pointB - pointA, pointC - pointA);
-
-	for (i32 Y = minY; Y <= maxY; ++Y)
-	{
-		for (i32 X = minX; X <= maxX; ++X)
-		{
-			V2 pixelPoint = V2((f32)X, (f32)Y) + V2(0.5f, 0.5f);
-
-			V2 pixelEdges[] =
-			{
-				pixelPoint - pointA,
-				pixelPoint - pointB,
-				pixelPoint - pointC
-			};
-
-			f32 crossLengths[] =
-			{
-				V2::CrossProduct(pixelEdges[0], edges[0]),
-				V2::CrossProduct(pixelEdges[1], edges[1]),
-				V2::CrossProduct(pixelEdges[2], edges[2])
-			};
-
-			if ((crossLengths[0] > 0.0f || (isTopLeft[0] && crossLengths[0] == 0.0f)) &&
-				(crossLengths[1] > 0.0f || (isTopLeft[1] && crossLengths[1] == 0.0f)) &&
-				(crossLengths[2] > 0.0f || (isTopLeft[2] && crossLengths[2] == 0.0f)))
-			{
-				u32 pixelIndex = Y * frameBufferWidth + X;
-
-				f32 t0 = -crossLengths[1] / barycentricDiv;
-				f32 t1 = -crossLengths[2] / barycentricDiv;
-				f32 t2 = -crossLengths[0] / barycentricDiv;
-
-				f32 depth = 1.0f / (t0 * (1.0f / points[0].z) + t1 * (1.0f / points[1].z) + t2 * (1.0f / points[2].z));
-
-				if (depth < zBuffer[pixelIndex])
-				{
-					V3 finalColor = (t0 * colors[0] + t1 * colors[1] + t2 * colors[2]) * 255.0f;
-					frameBufferPixels[pixelIndex] = ((u32)0xFF << 24) | ((u32)finalColor.r << 16) | ((u32)finalColor.g << 8) | (u32)finalColor.b;
-
-					zBuffer[pixelIndex] = depth;
-				}
-			}
-		}
-	}
+	return V2(frameBufferWidth, frameBufferHeight) * 0.5f * (NdcPoint + V2(1.0f, 1.0f));
 }
 
 void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V3& modelColor0, const V3& modelColor1, const V3& modelColor2, const M4& transform) const
 {
-	V3 transformedPoint0 = (transform * V4(modelVertex0, 1.0f)).xyz;
-	V3 transformedPoint1 = (transform * V4(modelVertex1, 1.0f)).xyz;
-	V3 transformedPoint2 = (transform * V4(modelVertex2, 1.0f)).xyz;
+	V4 transformedPoint0 = transform * V4(modelVertex0, 1.0f);
+	V4 transformedPoint1 = transform * V4(modelVertex1, 1.0f);
+	V4 transformedPoint2 = transform * V4(modelVertex2, 1.0f);
 
-	V2 pointA = ProjectPoint(transformedPoint0);
-	V2 pointB = ProjectPoint(transformedPoint1);
-	V2 pointC = ProjectPoint(transformedPoint2);
+	transformedPoint0.xyz /= transformedPoint0.w;
+	transformedPoint1.xyz /= transformedPoint1.w;
+	transformedPoint2.xyz /= transformedPoint2.w;
+
+	V2 pointA = NdcToBufferCoordinates(transformedPoint0.xy);
+	V2 pointB = NdcToBufferCoordinates(transformedPoint1.xy);
+	V2 pointC = NdcToBufferCoordinates(transformedPoint2.xy);
 
 	i32 minX = (i32)min(min(pointA.x, pointB.x), pointC.x);
 	i32 maxX = (i32)ceil(max(max(pointA.x, pointB.x), pointC.x));
@@ -508,9 +436,8 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 				f32 t1 = -crossLengths[2] / barycentricDiv;
 				f32 t2 = -crossLengths[0] / barycentricDiv;
 
-				f32 depth = t0 * (1.0f / transformedPoint0.z) + t1 * (1.0f / transformedPoint1.z) + t2 * (1.0f / transformedPoint2.z);
-				depth = 1.0f / depth;
-				if (depth < zBuffer[pixelIndex])
+				f32 depth = t0 * transformedPoint0.z + t1 * transformedPoint1.z + t2 * transformedPoint2.z;
+				if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])
 				{
 					V3 finalColor = (t0 * modelColor0 + t1 * modelColor1 + t2 * modelColor2) * 255.0f;
 					frameBufferPixels[pixelIndex] = ((u32)0xFF << 24) | ((u32)finalColor.r << 16) | ((u32)finalColor.g << 8) | (u32)finalColor.b;

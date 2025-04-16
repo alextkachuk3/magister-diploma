@@ -43,10 +43,9 @@ public:
 
 	void ReleaseResources();
 	void ProcessSystemMessages();
-	void ProcessWindowSize();
 
 	void RenderFrame() const;
-	V2 ProjectPoint(V3 pos) const;
+	V2 NdcToBufferCoordinates(V2 NdcPoint) const;
 	void DrawTriangle(const V3* points, const V3* colors) const;
 	void DrawTriangle(const V3& ModelVertex0, const V3& ModelVertex1, const V3& ModelVertex2, const V3& ModelColor0, const V3& ModelColor1, const V3& ModelColor2, const M4& Transform) const;
 

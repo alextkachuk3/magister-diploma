@@ -76,8 +76,8 @@ M4 M4::Perspective(const f32 aspectRatio, const f32 fov, const f32 nearZ, const 
 	return M4(
 		V4(1.0f / (tan(fov * 0.5f) * aspectRatio), 0.0f, 0.0f, 0.0f),
 			V4(0.0f, 1.0f / tan(fov * 0.5f), 0.0f, 0.0f),
-			V4(0.0f, 0.0f, -farZ / (nearZ - farZ), nearZ * farZ / (nearZ - farZ)),
-			V4(0.0f, 0.0f, 0.0, 1.0f)
+			V4(0.0f, 0.0f, -farZ / (nearZ - farZ), 1.0f),
+			V4(0.0f, 0.0f, nearZ * farZ / (nearZ - farZ), 0.0f)
 		);
 }
 

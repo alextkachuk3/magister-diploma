@@ -45,6 +45,14 @@ V3& V3::operator-=(const V3& other)
 	return *this;
 }
 
+V3& V3::operator/=(const f32 scalar)
+{
+	x /= scalar;
+	y /= scalar;
+	z /= scalar;
+	return *this;
+}
+
 V3 operator*(f32 scalar, const V3& v3)
 {
 	return V3(v3.x * scalar, v3.y * scalar, v3.z * scalar);
