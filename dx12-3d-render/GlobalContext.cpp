@@ -48,6 +48,7 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 	Assert(GetClientRect(windowHandle, &clientRect));
 	frameBufferWidth = clientRect.right - clientRect.left;
 	frameBufferHeight = clientRect.bottom - clientRect.top;
+	aspectRatio = f32(frameBufferWidth) / f32(frameBufferHeight);
 
 	frameBufferPixels = new u32[frameBufferWidth * frameBufferHeight];
 	zBuffer = new f32[frameBufferWidth * frameBufferHeight];
@@ -149,7 +150,7 @@ void GlobalContext::Run()
 			3, 7, 4,
 		};
 
-		M4 transform = (camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
+		M4 transform = (M4::Perspective(aspectRatio, 1.05f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
 
 		for (u32 i = 0; i < 36; i += 3)
 		{
@@ -339,11 +340,6 @@ void GlobalContext::ProcessSystemMessages()
 
 void GlobalContext::RenderFrame() const
 {
-	RECT clientRect = {};
-	Assert(GetClientRect(windowHandle, &clientRect));
-	uint32_t clientWidth = clientRect.right - clientRect.left;
-	uint32_t clientHeight = clientRect.bottom - clientRect.top;
-
 	BITMAPINFO bitmapInfo = {};
 	bitmapInfo.bmiHeader.biSize = sizeof(tagBITMAPINFOHEADER);
 	bitmapInfo.bmiHeader.biWidth = frameBufferWidth;
@@ -355,7 +351,7 @@ void GlobalContext::RenderFrame() const
 	Assert(StretchDIBits(
 		deviceContext,
 		0, 0,
-		clientWidth, clientHeight,
+		frameBufferWidth, frameBufferHeight,
 		0, 0,
 		frameBufferWidth, frameBufferHeight,
 		frameBufferPixels,

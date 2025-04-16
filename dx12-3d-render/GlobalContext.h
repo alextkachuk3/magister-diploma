@@ -19,6 +19,7 @@ private:
 	HDC deviceContext;
 	u32 frameBufferWidth;
 	u32 frameBufferHeight;
+	f32 aspectRatio;
 	u32* frameBufferPixels;
 	f32* zBuffer;
 
@@ -42,6 +43,7 @@ public:
 
 	void ReleaseResources();
 	void ProcessSystemMessages();
+	void ProcessWindowSize();
 
 	void RenderFrame() const;
 	V2 ProjectPoint(V3 pos) const;

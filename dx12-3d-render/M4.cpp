@@ -71,6 +71,16 @@ M4 M4::Translation(const V3& A)
 	return Translation(A.x, A.y, A.z);
 }
 
+M4 M4::Perspective(const f32 aspectRatio, const f32 fov, const f32 nearZ, const f32 farZ)
+{
+	return M4(
+		V4(1.0f / (tan(fov * 0.5f) * aspectRatio), 0.0f, 0.0f, 0.0f),
+			V4(0.0f, 1.0f / tan(fov * 0.5f), 0.0f, 0.0f),
+			V4(0.0f, 0.0f, -farZ / (nearZ - farZ), nearZ * farZ / (nearZ - farZ)),
+			V4(0.0f, 0.0f, 0.0, 1.0f)
+		);
+}
+
 V4 M4::operator*(const V4& B) const
 {
 	return v[0] * B.x + v[1] * B.y + v[2] * B.z + v[3] * B.w;
