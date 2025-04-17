@@ -31,6 +31,13 @@ V2 V2::operator/(const f32 scalar) const
 	return V2(x / scalar, y / scalar);
 }
 
+V2& V2::operator/=(const f32 scalar)
+{
+	x /= scalar;
+	y /= scalar;
+	return *this;
+}
+
 V2 operator*(const f32 scalar, const V2& v2)
 {
 	return V2(scalar * v2.x, scalar * v2.y);

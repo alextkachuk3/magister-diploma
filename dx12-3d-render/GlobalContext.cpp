@@ -72,6 +72,9 @@ void GlobalContext::Run()
 	const f32 speed = 0.75f;
 	f32 currentTime = -2.0f * pi;
 
+	Texture texture(32, 32);
+	texture.generateCheckerboardTexture(1);
+
 	while (isRunning)
 	{
 		LARGE_INTEGER endTime;
@@ -117,16 +120,16 @@ void GlobalContext::Run()
 			V3(0.5f, -0.5f, 0.5f),
 		};
 
-		V3 ModelColors[] =
+		V2 modelUvs[] =
 		{
-			V3(1, 0, 0),
-			V3(0, 0, 1),
-			V3(0.2f, 0.8f, 0.2f),
-			V3(1, 0, 1),
-			V3(1, 1, 0),
-			V3(1, 0.5f, 0),
-			V3(0.5f, 0, 0.5f),
-			V3(0.2f, 0.2f, 1),
+			V2(0.0f, 0.0f),
+			V2(1.0f, 0.0f),
+			V2(1.0, 1.0f),
+			V2(0.0f, 1.0f),
+			V2(0.0f, 0.0f),
+			V2(1.0f, 0.0f),
+			V2(1.0f, 1.0f),
+			V2(0.0f, 1.0f),
 		};
 
 		u32 ModelIndices[] =
@@ -159,8 +162,8 @@ void GlobalContext::Run()
 			u32 Index2 = ModelIndices[i + 2];
 
 			DrawTriangle(ModelVertices[Index0], ModelVertices[Index1], ModelVertices[Index2],
-				ModelColors[Index0], ModelColors[Index1], ModelColors[Index2],
-				transform);
+				modelUvs[Index0], modelUvs[Index1], modelUvs[Index2],
+				transform, texture);
 		}
 
 		bool mousePressed = false;
@@ -293,9 +296,6 @@ void GlobalContext::ProcessSystemMessages()
 			case 'D':
 				dButtonPressed = true;
 				break;
-			//case VK_LBUTTON:
-			//	leftMouseButtonPressed = true;
-			//	break;
 			case VK_ESCAPE:
 				isRunning = false;
 				break;
@@ -320,9 +320,6 @@ void GlobalContext::ProcessSystemMessages()
 			case 'D':
 				dButtonPressed = false;
 				break;
-			//case VK_LBUTTON:
-			//	leftMouseButtonPressed = false;
-			//	break;
 			default:
 				break;
 			}
@@ -364,6 +361,105 @@ void GlobalContext::RenderFrame() const
 V2 GlobalContext::NdcToBufferCoordinates(V2 NdcPoint) const
 {
 	return V2(frameBufferWidth, frameBufferHeight) * 0.5f * (NdcPoint + V2(1.0f, 1.0f));
+}
+
+void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2& modelUv0, const V2& modelUv1, const V2& modelUv2, const M4& transform, const Texture& texture) const  
+{  
+V4 transformedPoint0 = transform * V4(modelVertex0, 1.0f);  
+V4 transformedPoint1 = transform * V4(modelVertex1, 1.0f);  
+V4 transformedPoint2 = transform * V4(modelVertex2, 1.0f);  
+
+transformedPoint0.xyz /= transformedPoint0.w;  
+transformedPoint1.xyz /= transformedPoint1.w;  
+transformedPoint2.xyz /= transformedPoint2.w;  
+
+V2 pointA = NdcToBufferCoordinates(transformedPoint0.xy);  
+V2 pointB = NdcToBufferCoordinates(transformedPoint1.xy);  
+V2 pointC = NdcToBufferCoordinates(transformedPoint2.xy);  
+
+i32 minX = (i32)min(min(pointA.x, pointB.x), pointC.x);  
+i32 maxX = (i32)ceil(max(max(pointA.x, pointB.x), pointC.x));  
+i32 minY = (i32)min(min(pointA.y, pointB.y), pointC.y);  
+i32 maxY = (i32)ceil(max(max(pointA.y, pointB.y), pointC.y));  
+
+minX = std::clamp(minX, 0, (i32)frameBufferWidth - 1);  
+maxX = std::clamp(maxX, 0, (i32)frameBufferWidth - 1);  
+minY = std::clamp(minY, 0, (i32)frameBufferHeight - 1);  
+maxY = std::clamp(maxY, 0, (i32)frameBufferHeight - 1);  
+
+V2 edges[] =  
+{  
+	pointB - pointA,  
+	pointC - pointB,  
+	pointA - pointC  
+};  
+
+bool isTopLeft[] =  
+{  
+	(edges[0].x >= 0.0f && edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),  
+	(edges[1].x >= 0.0f && edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),  
+	(edges[2].x >= 0.0f && edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)  
+};  
+
+f32 barycentricDiv = V2::CrossProduct(pointB - pointA, pointC - pointA);  
+
+for (i32 Y = minY; Y <= maxY; ++Y)  
+{  
+	for (i32 X = minX; X <= maxX; ++X)  
+	{  
+		V2 pixelPoint = V2((f32)X, (f32)Y) + V2(0.5f, 0.5f);  
+
+		V2 pixelEdges[] =  
+		{  
+			pixelPoint - pointA,  
+			pixelPoint - pointB,  
+			pixelPoint - pointC  
+		};  
+
+		f32 crossLengths[] =  
+		{  
+			V2::CrossProduct(pixelEdges[0], edges[0]),  
+			V2::CrossProduct(pixelEdges[1], edges[1]),  
+			V2::CrossProduct(pixelEdges[2], edges[2])  
+		};  
+
+		if ((crossLengths[0] > 0.0f || (isTopLeft[0] && crossLengths[0] == 0.0f)) &&  
+			(crossLengths[1] > 0.0f || (isTopLeft[1] && crossLengths[1] == 0.0f)) &&  
+			(crossLengths[2] > 0.0f || (isTopLeft[2] && crossLengths[2] == 0.0f)))  
+		{  
+			u32 pixelIndex = Y * frameBufferWidth + X;  
+
+			f32 t0 = -crossLengths[1] / barycentricDiv;  
+			f32 t1 = -crossLengths[2] / barycentricDiv;  
+			f32 t2 = -crossLengths[0] / barycentricDiv;  
+
+			f32 depth = t0 * transformedPoint0.z + t1 * transformedPoint1.z + t2 * transformedPoint2.z;  
+			if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])  
+			{  
+				V2 uv = (t0 * modelUv0 / transformedPoint0.w) + (t1 * modelUv1 / transformedPoint1.w) + (t2 * modelUv2 / transformedPoint2.w);  
+				uv /= (t0 / transformedPoint0.w + t1 / transformedPoint1.w + t2 / transformedPoint2.w);  
+
+				i32 texelX = (i32)floorf(uv.x * (texture.getWidth() - 1));  
+				i32 texelY = (i32)floorf(uv.y * (texture.getHeight() - 1));  
+
+				u32 texelColor;  
+
+				if (texelX >= 0 && texelX < (i32)texture.getWidth() &&  
+					texelY >= 0 && texelY < (i32)texture.getHeight())  
+				{  
+					texelColor = texture[texelY * texture.getWidth() + texelX];  
+				}  
+				else  
+				{  
+					texelColor = 0xFF800080;  
+				}  
+
+				frameBufferPixels[pixelIndex] = texelColor;  
+				zBuffer[pixelIndex] = depth;  
+			}  
+		}  
+	}  
+}  
 }
 
 void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V3& modelColor0, const V3& modelColor1, const V3& modelColor2, const M4& transform) const

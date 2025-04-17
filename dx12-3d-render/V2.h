@@ -21,6 +21,7 @@ union V2
 	V2 operator*(const f32 scalar) const;
 	V2 operator*(const V2& other) const;
 	V2 operator/(const f32 scalar) const;
+	V2& operator/=(const f32 scalar);
 
 	friend V2 operator*(const f32 scalar, const V2& v2);
 

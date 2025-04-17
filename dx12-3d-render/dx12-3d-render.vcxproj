@@ -131,6 +131,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="GlobalContext.h" />
     <ClInclude Include="M4.h" />
@@ -144,6 +145,7 @@
     <ClCompile Include="GlobalContext.cpp" />
     <ClCompile Include="M4.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="V2.cpp" />
     <ClCompile Include="V3.cpp" />
     <ClCompile Include="V4.cpp" />
