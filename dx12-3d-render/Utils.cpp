@@ -3,9 +3,9 @@
 V3 Utils::u32ColorToV3Rgb(const u32 color)
 {
 	return V3(
-		((color >> 16) & 0xFF),
-		((color >> 8) & 0xFF),
-		((color >> 0) & 0xFF)) / 255.0f;
+		static_cast<f32>((color >> 16) & 0xFF),
+		static_cast<f32>((color >> 8) & 0xFF),
+		static_cast<f32>((color >> 0) & 0xFF)) / 255.0f;
 }
 
 u32 Utils::V3RgbToU32Color(V3 color)

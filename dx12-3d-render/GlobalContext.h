@@ -14,6 +14,7 @@
 #include "M4.h"
 #include "Camera.h"
 #include "Texture.h"
+#include "Model.h"
 #include "SamplerType.h"
 
 class GlobalContext
@@ -28,6 +29,7 @@ private:
 	f32 aspectRatio;
 	std::unique_ptr<u32[]> frameBufferPixels;
 	std::unique_ptr<f32[]> zBuffer;
+	static GlobalContext* activeInstance;
 
 	bool wButtonPressed = false;
 	bool aButtonPressed = false;
@@ -47,6 +49,9 @@ public:
 	GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height);
 	~GlobalContext();
 
+	static void SetActiveInstance(GlobalContext* instance);
+	static GlobalContext* GetActiveInstance();
+
 	void Run();
 	static void Stop();
 
@@ -55,11 +60,13 @@ public:
 
 	void RenderFrame() const;
 	V2f NdcToBufferCoordinates(V2f NdcPoint) const;
+	void RenderModel(const Model& model, const M4& modelTransform) const;
 	void DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2f& modelUv0, const V2f& modelUv1, const V2f& modelUv2, const M4& transform, const Texture& texture) const;
 	void DrawTriangle(const V3& ModelVertex0, const V3& ModelVertex1, const V3& ModelVertex2, const V3& ModelColor0, const V3& ModelColor1, const V3& ModelColor2, const M4& Transform) const;
 
 	void ClearBuffers();
-	void Resize(const u32 newWidth, const u32 newHeight);
+	static void Resize(const u32 newWidth, const u32 newHeight);
+	void ResizeInternal(u32 newWidth, u32 newHeight);
 
 	HWND GetWindowHandle() const;
 	void SetWindowHandle(HWND handle);

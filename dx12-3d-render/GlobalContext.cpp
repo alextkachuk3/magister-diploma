@@ -1,5 +1,4 @@
 #include "GlobalContext.h"
-#include "Model.h"
 
 static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -9,16 +8,25 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 	case WM_CLOSE:
 		GlobalContext::Stop();
 		return 0;
+	case WM_SIZE:
+	{
+		u32 newWidth = LOWORD(lParam);
+		u32 newHeight = HIWORD(lParam);
+		GlobalContext::Resize(newWidth, newHeight);
+		return 0;
+	}
 	default:
 		return DefWindowProcA(windowHandle, message, wParam, lParam);
 	}
 }
 
+GlobalContext* GlobalContext::activeInstance(nullptr);
 const f32 GlobalContext::pi(std::numbers::pi_v<f32>);
 bool GlobalContext::isRunning(false);
 
 GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height)
 {
+	SetActiveInstance(this);
 	WNDCLASSA windowClass = {};
 	windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	windowClass.lpfnWndProc = Win32WindowCallBack;
@@ -64,6 +72,16 @@ GlobalContext::~GlobalContext()
 	ReleaseResources();
 }
 
+void GlobalContext::SetActiveInstance(GlobalContext* instance)
+{
+	activeInstance = instance;
+}
+
+GlobalContext* GlobalContext::GetActiveInstance() 
+{
+	return activeInstance;
+}
+
 void GlobalContext::Run()
 {
 	isRunning = true;
@@ -101,17 +119,7 @@ void GlobalContext::Run()
 
 		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, 0, 0) * M4::Scale(1, 1, 1));
 
-		for (size_t i = 0; i < cube.indices.size(); i += 3)
-		{
-			u32 Index0 = cube.indices[i + 0];
-			u32 Index1 = cube.indices[i + 1];
-			u32 Index2 = cube.indices[i + 2];
-
-			DrawTriangle(
-				cube.vertices[Index0], cube.vertices[Index1], cube.vertices[Index2],
-				cube.uvs[Index0], cube.uvs[Index1], cube.uvs[Index2],
-				transform, *cube.texture);
-		}
+		RenderModel(cube, transform);
 
 		camera.UpdateMouseControl(windowHandle);
 		camera.UpdateViewMatrix(frameTime, wButtonPressed, aButtonPressed, sButtonPressed, dButtonPressed);
@@ -228,6 +236,21 @@ void GlobalContext::RenderFrame() const
 V2f GlobalContext::NdcToBufferCoordinates(V2f NdcPoint) const
 {
 	return V2f(frameBufferWidthF32, frameBufferHeightF32) * 0.5f * (NdcPoint + V2f(1.0f, 1.0f));
+}
+
+void GlobalContext::RenderModel(const Model& model, const M4& modelTransform) const
+{
+	for (size_t i = 0; i < model.indices.size(); i += 3)
+	{
+		u32 Index0 = model.indices[i + 0];
+		u32 Index1 = model.indices[i + 1];
+		u32 Index2 = model.indices[i + 2];
+
+		DrawTriangle(
+			model.vertices[Index0], model.vertices[Index1], model.vertices[Index2],
+			model.uvs[Index0], model.uvs[Index1], model.uvs[Index2],
+			modelTransform, *model.texture);
+	}
 }
 
 void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2f& modelUv0, const V2f& modelUv1, const V2f& modelUv2, const M4& transform, const Texture& texture) const
@@ -470,7 +493,15 @@ void GlobalContext::ClearBuffers()
 	}
 }
 
-void GlobalContext::Resize(const u32 newWidth, const u32 newHeight)
+void GlobalContext::Resize(u32 newWidth, u32 newHeight)
+{
+	if (activeInstance) 
+	{
+		activeInstance->ResizeInternal(newWidth, newHeight);
+	}
+}
+
+void GlobalContext::ResizeInternal(const u32 newWidth, const u32 newHeight)
 {
 	if (newWidth == 0 || newHeight == 0)
 		return;

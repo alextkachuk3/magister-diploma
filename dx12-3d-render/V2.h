@@ -37,6 +37,3 @@ extern template union V2<i32>;
 
 using V2f = V2<f32>;
 using V2i = V2<i32>;
-
-V2f operator*(const f32 scalar, const V2f& v2);
-V2i operator*(const i32 scalar, const V2i& v2);
