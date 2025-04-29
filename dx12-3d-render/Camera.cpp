@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-V2 Camera::getPreviousMousePosition() const
+V2f Camera::getPreviousMousePosition() const
 {
 	return previousMousePosition;
 }
@@ -30,7 +30,7 @@ f32 Camera::getPitch() const
 	return pitch;
 }
 
-void Camera::setPreviousMousePosition(const V2& mousePosition)
+void Camera::setPreviousMousePosition(const V2f& mousePosition)
 {
 	previousMousePosition = mousePosition;
 }

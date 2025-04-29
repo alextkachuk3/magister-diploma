@@ -21,8 +21,8 @@ union V4
 
 	struct
 	{
-		V2 xy;
-		V2 ignored_1;
+		V2f xy;
+		V2f ignored_1;
 	};
 
 	float e[4];

@@ -51,3 +51,4 @@ void Texture::generateCheckerboardTexture(u32 squareSize)
 		}
 	}
 }
+

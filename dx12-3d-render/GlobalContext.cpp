@@ -23,6 +23,7 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 	windowClass.lpfnWndProc = Win32WindowCallBack;
 	windowClass.hInstance = hInstance;
 	windowClass.lpszClassName = windowTitle;
+	samplerType = SamplerType::NearestTexel;
 
 	if (!RegisterClassA(&windowClass)) AssertMsg("Failed to register class!");
 
@@ -30,7 +31,8 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 		0,
 		windowClass.lpszClassName,
 		windowTitle,
-		WS_POPUP | WS_VISIBLE,
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+		//WS_POPUP | WS_VISIBLE,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
 		width,
@@ -120,16 +122,16 @@ void GlobalContext::Run()
 			V3(0.5f, -0.5f, 0.5f),
 		};
 
-		V2 modelUvs[] =
+		V2f modelUvs[] =
 		{
-			V2(0.0f, 0.0f),
-			V2(1.0f, 0.0f),
-			V2(1.0, 1.0f),
-			V2(0.0f, 1.0f),
-			V2(0.0f, 0.0f),
-			V2(1.0f, 0.0f),
-			V2(1.0f, 1.0f),
-			V2(0.0f, 1.0f),
+			V2f(0.0f, 0.0f),
+			V2f(1.0f, 0.0f),
+			V2f(1.0, 1.0f),
+			V2f(0.0f, 1.0f),
+			V2f(0.0f, 0.0f),
+			V2f(1.0f, 0.0f),
+			V2f(1.0f, 1.0f),
+			V2f(0.0f, 1.0f),
 		};
 
 		u32 ModelIndices[] =
@@ -153,7 +155,66 @@ void GlobalContext::Run()
 			3, 7, 4,
 		};
 
-		M4 transform = (M4::Perspective(aspectRatio, 1.4f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
+		//V3 ModelVertices[] =
+		//{
+		//	// Front face
+		//	{-0.5f, -0.5f, -0.5f},
+		//	{-0.5f,  0.5f, -0.5f},
+		//	{ 0.5f,  0.5f, -0.5f},
+		//	{ 0.5f, -0.5f, -0.5f},
+
+		//	// Back face
+		//	{ 0.5f, -0.5f,  0.5f},
+		//	{ 0.5f,  0.5f,  0.5f},
+		//	{-0.5f,  0.5f,  0.5f},
+		//	{-0.5f, -0.5f,  0.5f},
+
+		//	// Left face
+		//	{-0.5f, -0.5f,  0.5f},
+		//	{-0.5f,  0.5f,  0.5f},
+		//	{-0.5f,  0.5f, -0.5f},
+		//	{-0.5f, -0.5f, -0.5f},
+
+		//	// Right face
+		//	{ 0.5f, -0.5f, -0.5f},
+		//	{ 0.5f,  0.5f, -0.5f},
+		//	{ 0.5f,  0.5f,  0.5f},
+		//	{ 0.5f, -0.5f,  0.5f},
+
+		//	// Top face
+		//	{-0.5f,  0.5f, -0.5f},
+		//	{-0.5f,  0.5f,  0.5f},
+		//	{ 0.5f,  0.5f,  0.5f},
+		//	{ 0.5f,  0.5f, -0.5f},
+
+		//	// Bottom face
+		//	{-0.5f, -0.5f,  0.5f},
+		//	{-0.5f, -0.5f, -0.5f},
+		//	{ 0.5f, -0.5f, -0.5f},
+		//	{ 0.5f, -0.5f,  0.5f}
+		//};
+
+		//V2 modelUvs[] =
+		//{
+		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Front
+		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Back
+		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Left
+		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Right
+		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Top
+		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}  // Bottom
+		//};
+
+		//u32 ModelIndices[] =
+		//{
+		//	0, 1, 2, 2, 3, 0,       // Front
+		//	4, 5, 6, 6, 7, 4,       // Back
+		//	8, 9,10,10,11, 8,       // Left
+		//   12,13,14,14,15,12,       // Right
+		//   16,17,18,18,19,16,       // Top
+		//   20,21,22,22,23,20        // Bottom
+		//};
+
+		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
 
 		for (u32 i = 0; i < 36; i += 3)
 		{
@@ -167,7 +228,7 @@ void GlobalContext::Run()
 		}
 
 		bool mousePressed = false;
-		V2 currentMousePosition;
+		V2f currentMousePosition;
 
 		if (GetActiveWindow() == windowHandle)
 		{
@@ -358,108 +419,119 @@ void GlobalContext::RenderFrame() const
 	));
 }
 
-V2 GlobalContext::NdcToBufferCoordinates(V2 NdcPoint) const
+V2f GlobalContext::NdcToBufferCoordinates(V2f NdcPoint) const
 {
-	return V2(frameBufferWidth, frameBufferHeight) * 0.5f * (NdcPoint + V2(1.0f, 1.0f));
+	return V2f(frameBufferWidth, frameBufferHeight) * 0.5f * (NdcPoint + V2f(1.0f, 1.0f));
 }
 
-void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2& modelUv0, const V2& modelUv1, const V2& modelUv2, const M4& transform, const Texture& texture) const  
-{  
-V4 transformedPoint0 = transform * V4(modelVertex0, 1.0f);  
-V4 transformedPoint1 = transform * V4(modelVertex1, 1.0f);  
-V4 transformedPoint2 = transform * V4(modelVertex2, 1.0f);  
+void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2f& modelUv0, const V2f& modelUv1, const V2f& modelUv2, const M4& transform, const Texture& texture) const
+{
+	V4 transformedPoint0 = transform * V4(modelVertex0, 1.0f);
+	V4 transformedPoint1 = transform * V4(modelVertex1, 1.0f);
+	V4 transformedPoint2 = transform * V4(modelVertex2, 1.0f);
 
-transformedPoint0.xyz /= transformedPoint0.w;  
-transformedPoint1.xyz /= transformedPoint1.w;  
-transformedPoint2.xyz /= transformedPoint2.w;  
+	transformedPoint0.xyz /= transformedPoint0.w;
+	transformedPoint1.xyz /= transformedPoint1.w;
+	transformedPoint2.xyz /= transformedPoint2.w;
 
-V2 pointA = NdcToBufferCoordinates(transformedPoint0.xy);  
-V2 pointB = NdcToBufferCoordinates(transformedPoint1.xy);  
-V2 pointC = NdcToBufferCoordinates(transformedPoint2.xy);  
+	V2f pointA = NdcToBufferCoordinates(transformedPoint0.xy);
+	V2f pointB = NdcToBufferCoordinates(transformedPoint1.xy);
+	V2f pointC = NdcToBufferCoordinates(transformedPoint2.xy);
 
-i32 minX = (i32)min(min(pointA.x, pointB.x), pointC.x);  
-i32 maxX = (i32)ceil(max(max(pointA.x, pointB.x), pointC.x));  
-i32 minY = (i32)min(min(pointA.y, pointB.y), pointC.y);  
-i32 maxY = (i32)ceil(max(max(pointA.y, pointB.y), pointC.y));  
+	i32 minX = (i32)min(min(pointA.x, pointB.x), pointC.x);
+	i32 maxX = (i32)ceil(max(max(pointA.x, pointB.x), pointC.x));
+	i32 minY = (i32)min(min(pointA.y, pointB.y), pointC.y);
+	i32 maxY = (i32)ceil(max(max(pointA.y, pointB.y), pointC.y));
 
-minX = std::clamp(minX, 0, (i32)frameBufferWidth - 1);  
-maxX = std::clamp(maxX, 0, (i32)frameBufferWidth - 1);  
-minY = std::clamp(minY, 0, (i32)frameBufferHeight - 1);  
-maxY = std::clamp(maxY, 0, (i32)frameBufferHeight - 1);  
+	minX = std::clamp(minX, 0, (i32)frameBufferWidth - 1);
+	maxX = std::clamp(maxX, 0, (i32)frameBufferWidth - 1);
+	minY = std::clamp(minY, 0, (i32)frameBufferHeight - 1);
+	maxY = std::clamp(maxY, 0, (i32)frameBufferHeight - 1);
 
-V2 edges[] =  
-{  
-	pointB - pointA,  
-	pointC - pointB,  
-	pointA - pointC  
-};  
+	V2f edges[] =
+	{
+		pointB - pointA,
+		pointC - pointB,
+		pointA - pointC
+	};
 
-bool isTopLeft[] =  
-{  
-	(edges[0].x >= 0.0f && edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),  
-	(edges[1].x >= 0.0f && edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),  
-	(edges[2].x >= 0.0f && edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)  
-};  
+	bool isTopLeft[] =
+	{
+		(edges[0].x >= 0.0f && edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),
+		(edges[1].x >= 0.0f && edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),
+		(edges[2].x >= 0.0f && edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)
+	};
 
-f32 barycentricDiv = V2::CrossProduct(pointB - pointA, pointC - pointA);  
+	f32 barycentricDiv = V2f::CrossProduct(pointB - pointA, pointC - pointA);
 
-for (i32 Y = minY; Y <= maxY; ++Y)  
-{  
-	for (i32 X = minX; X <= maxX; ++X)  
-	{  
-		V2 pixelPoint = V2((f32)X, (f32)Y) + V2(0.5f, 0.5f);  
+	for (i32 Y = minY; Y <= maxY; ++Y)
+	{
+		for (i32 X = minX; X <= maxX; ++X)
+		{
+			V2f pixelPoint = V2f((f32)X, (f32)Y) + V2f(0.5f, 0.5f);
 
-		V2 pixelEdges[] =  
-		{  
-			pixelPoint - pointA,  
-			pixelPoint - pointB,  
-			pixelPoint - pointC  
-		};  
+			V2f pixelEdges[] =
+			{
+				pixelPoint - pointA,
+				pixelPoint - pointB,
+				pixelPoint - pointC
+			};
 
-		f32 crossLengths[] =  
-		{  
-			V2::CrossProduct(pixelEdges[0], edges[0]),  
-			V2::CrossProduct(pixelEdges[1], edges[1]),  
-			V2::CrossProduct(pixelEdges[2], edges[2])  
-		};  
+			f32 crossLengths[] =
+			{
+				V2f::CrossProduct(pixelEdges[0], edges[0]),
+				V2f::CrossProduct(pixelEdges[1], edges[1]),
+				V2f::CrossProduct(pixelEdges[2], edges[2])
+			};
 
-		if ((crossLengths[0] > 0.0f || (isTopLeft[0] && crossLengths[0] == 0.0f)) &&  
-			(crossLengths[1] > 0.0f || (isTopLeft[1] && crossLengths[1] == 0.0f)) &&  
-			(crossLengths[2] > 0.0f || (isTopLeft[2] && crossLengths[2] == 0.0f)))  
-		{  
-			u32 pixelIndex = Y * frameBufferWidth + X;  
+			if ((crossLengths[0] > 0.0f || (isTopLeft[0] && crossLengths[0] == 0.0f)) &&
+				(crossLengths[1] > 0.0f || (isTopLeft[1] && crossLengths[1] == 0.0f)) &&
+				(crossLengths[2] > 0.0f || (isTopLeft[2] && crossLengths[2] == 0.0f)))
+			{
+				u32 pixelIndex = Y * frameBufferWidth + X;
 
-			f32 t0 = -crossLengths[1] / barycentricDiv;  
-			f32 t1 = -crossLengths[2] / barycentricDiv;  
-			f32 t2 = -crossLengths[0] / barycentricDiv;  
+				f32 t0 = -crossLengths[1] / barycentricDiv;
+				f32 t1 = -crossLengths[2] / barycentricDiv;
+				f32 t2 = -crossLengths[0] / barycentricDiv;
 
-			f32 depth = t0 * transformedPoint0.z + t1 * transformedPoint1.z + t2 * transformedPoint2.z;  
-			if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])  
-			{  
-				V2 uv = (t0 * modelUv0 / transformedPoint0.w) + (t1 * modelUv1 / transformedPoint1.w) + (t2 * modelUv2 / transformedPoint2.w);  
-				uv /= (t0 / transformedPoint0.w + t1 / transformedPoint1.w + t2 / transformedPoint2.w);  
+				f32 depth = t0 * transformedPoint0.z + t1 * transformedPoint1.z + t2 * transformedPoint2.z;
+				if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])
+				{
+					V2f uv = (t0 * modelUv0 / transformedPoint0.w) + (t1 * modelUv1 / transformedPoint1.w) + (t2 * modelUv2 / transformedPoint2.w);
+					uv /= (t0 / transformedPoint0.w + t1 / transformedPoint1.w + t2 / transformedPoint2.w);
 
-				i32 texelX = (i32)floorf(uv.x * (texture.getWidth() - 1));  
-				i32 texelY = (i32)floorf(uv.y * (texture.getHeight() - 1));  
+					u32 texelColor;
 
-				u32 texelColor;  
+					switch (samplerType)
+					{
+					case SamplerType::NearestTexel:
+					{
+						i32 texelX = (i32)floorf(uv.x * i32(texture.getWidth() - 1));
+						i32 texelY = (i32)floorf(uv.y * i32(texture.getHeight() - 1));
 
-				if (texelX >= 0 && texelX < (i32)texture.getWidth() &&  
-					texelY >= 0 && texelY < (i32)texture.getHeight())  
-				{  
-					texelColor = texture[texelY * texture.getWidth() + texelX];  
-				}  
-				else  
-				{  
-					texelColor = 0xFF800080;  
-				}  
+						if (texelX >= 0 && texelX < (i32)texture.getWidth() &&
+							texelY >= 0 && texelY < (i32)texture.getHeight())
+						{
+							texelColor = texture[texelY * texture.getWidth() + texelX];
+						}
+						else
+						{
+							texelColor = 0xFF800080;
+						}
+					} break;
+					case SamplerType::BilinearFiltration:
+					{
+						V2f texelV2 = uv * V2f(texture.getWidth(), texture.getHeight()) - V2f(0.5f, 0.5f);
+						
+					} break;
+					}
 
-				frameBufferPixels[pixelIndex] = texelColor;  
-				zBuffer[pixelIndex] = depth;  
-			}  
-		}  
-	}  
-}  
+					frameBufferPixels[pixelIndex] = texelColor;
+					zBuffer[pixelIndex] = depth;
+				}
+			}
+		}
+	}
 }
 
 void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V3& modelColor0, const V3& modelColor1, const V3& modelColor2, const M4& transform) const
@@ -486,7 +558,7 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 	minY = std::clamp(minY, 0, (i32)frameBufferHeight - 1);
 	maxY = std::clamp(maxY, 0, (i32)frameBufferHeight - 1);
 
-	V2 edges[] =
+	V2f edges[] =
 	{
 		pointB - pointA,
 		pointC - pointB,
@@ -500,15 +572,15 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 		(edges[2].x >= 0.0f && edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)
 	};
 
-	f32 barycentricDiv = V2::CrossProduct(pointB - pointA, pointC - pointA);
+	f32 barycentricDiv = V2f::CrossProduct(pointB - pointA, pointC - pointA);
 
 	for (i32 Y = minY; Y <= maxY; ++Y)
 	{
 		for (i32 X = minX; X <= maxX; ++X)
 		{
-			V2 pixelPoint = V2((f32)X, (f32)Y) + V2(0.5f, 0.5f);
+			V2f pixelPoint = V2((f32)X, (f32)Y) + V2(0.5f, 0.5f);
 
-			V2 pixelEdges[] =
+			V2f pixelEdges[] =
 			{
 				pixelPoint - pointA,
 				pixelPoint - pointB,
@@ -517,9 +589,9 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 
 			f32 crossLengths[] =
 			{
-				V2::CrossProduct(pixelEdges[0], edges[0]),
-				V2::CrossProduct(pixelEdges[1], edges[1]),
-				V2::CrossProduct(pixelEdges[2], edges[2])
+				V2f::CrossProduct(pixelEdges[0], edges[0]),
+				V2f::CrossProduct(pixelEdges[1], edges[1]),
+				V2f::CrossProduct(pixelEdges[2], edges[2])
 			};
 
 			if ((crossLengths[0] > 0.0f || (isTopLeft[0] && crossLengths[0] == 0.0f)) &&

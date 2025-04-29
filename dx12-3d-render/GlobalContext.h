@@ -12,6 +12,7 @@
 #include "M4.h"
 #include "Camera.h"
 #include "Texture.h"
+#include "SamplerType.h"
 
 class GlobalContext
 {
@@ -30,6 +31,8 @@ private:
 	bool dButtonPressed = false;
 	bool leftMouseButtonPressed = false;
 
+	SamplerType samplerType;
+
 	Camera camera;
 
 	static bool isRunning;
@@ -46,8 +49,8 @@ public:
 	void ProcessSystemMessages();
 
 	void RenderFrame() const;
-	V2 NdcToBufferCoordinates(V2 NdcPoint) const;
-	void DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2& modelUv0, const V2& modelUv1, const V2& modelUv2, const M4& transform, const Texture& texture) const;
+	V2f NdcToBufferCoordinates(V2f NdcPoint) const;
+	void DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2f& modelUv0, const V2f& modelUv1, const V2f& modelUv2, const M4& transform, const Texture& texture) const;
 	void DrawTriangle(const V3& ModelVertex0, const V3& ModelVertex1, const V3& ModelVertex2, const V3& ModelColor0, const V3& ModelColor1, const V3& ModelColor2, const M4& Transform) const;
 
 	HWND GetWindowHandle() const;

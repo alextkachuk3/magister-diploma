@@ -20,14 +20,14 @@ union V3
 
 	struct
 	{
-		V2 xy;
+		V2f xy;
 		f32 ignored_0;
 	};
 
 	struct
 	{
 		f32 ignored_1;
-		V2 yz;
+		V2f yz;
 	};
 
 	f32 e[3];
@@ -46,8 +46,8 @@ union V3
 
 	friend V3 operator*(f32 scalar, const V3& v3);
 
-	V2 getXY() const;
-	V2 getYZ() const;
+	V2f getXY() const;
+	V2f getYZ() const;
 
 	static V3 Normalize(const V3& A);
 };

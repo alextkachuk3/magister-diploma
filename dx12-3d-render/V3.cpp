@@ -58,12 +58,12 @@ V3 operator*(f32 scalar, const V3& v3)
 	return V3(v3.x * scalar, v3.y * scalar, v3.z * scalar);
 }
 
-V2 V3::getXY() const
+V2f V3::getXY() const
 {
 	return V2(x, y);
 }
 
-V2 V3::getYZ() const
+V2f V3::getYZ() const
 {
 	return V2(y, z);
 }
