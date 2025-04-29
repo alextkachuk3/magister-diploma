@@ -57,6 +57,8 @@ public:
 	void DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2f& modelUv0, const V2f& modelUv1, const V2f& modelUv2, const M4& transform, const Texture& texture) const;
 	void DrawTriangle(const V3& ModelVertex0, const V3& ModelVertex1, const V3& ModelVertex2, const V3& ModelColor0, const V3& ModelColor1, const V3& ModelColor2, const M4& Transform) const;
 
+	void ClearBuffers();
+
 	HWND GetWindowHandle() const;
 	void SetWindowHandle(HWND handle);
 

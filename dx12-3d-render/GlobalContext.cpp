@@ -25,7 +25,7 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 	windowClass.hInstance = hInstance;
 	windowClass.lpszClassName = windowTitle;
 	samplerType = SamplerType::BilinearFiltration;
-	borderColor = Utils::u32ColorToV3Rgb(static_cast<u32>(Colors::Black));
+	borderColor = Utils::u32ColorToV3Rgb(Colors::Black);
 
 	if (!RegisterClassA(&windowClass)) AssertMsg("Failed to register class!");
 
@@ -82,28 +82,14 @@ void GlobalContext::Run()
 	{
 		LARGE_INTEGER endTime;
 		QueryPerformanceCounter(&endTime);
-		f32 frameTime = (f32)(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
+		f32 frameTime = static_cast<f32>(endTime.QuadPart - beginTime.QuadPart) / static_cast<f32>(timerFrequency.QuadPart);
 		beginTime = endTime;
 
 		char frameTimeMessage[32];
 		snprintf(frameTimeMessage, sizeof(frameTimeMessage), "FrameTime: %f\n", frameTime);
 		OutputDebugStringA(frameTimeMessage);
 
-		for (u32 y = 0; y < frameBufferHeight; y++)
-		{
-			for (u32 x = 0; x < frameBufferWidth; x++)
-			{
-				u8 red = 0;
-				u8 green = 0;
-				u8 blue = 0;
-				u8 alpha = 255;
-				u32 color = ((u32)alpha << 24) | ((u32)red << 16) | ((u32)green << 8) | (u32)blue;
-
-				u32 pixelIndex = y * frameBufferWidth + x;
-				frameBufferPixels[pixelIndex] = color;
-				zBuffer[pixelIndex] = FLT_MAX;
-			}
-		}
+		ClearBuffers();
 
 		currentTime += frameTime * speed;
 		if (currentTime > 2.0f * pi)
@@ -417,7 +403,7 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 						}
 						else
 						{
-							texelColor = static_cast<u32>(Colors::Purple);
+							texelColor = Colors::Purple;
 						}
 					} break;
 					case SamplerType::BilinearFiltration:
@@ -548,6 +534,19 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 					zBuffer[pixelIndex] = depth;
 				}
 			}
+		}
+	}
+}
+
+void GlobalContext::ClearBuffers()
+{
+	for (u32 y = 0; y < frameBufferHeight; y++)
+	{
+		for (u32 x = 0; x < frameBufferWidth; x++)
+		{
+			u32 pixelIndex = y * frameBufferWidth + x;
+			frameBufferPixels[pixelIndex] = Colors::Black;
+			zBuffer[pixelIndex] = FLT_MAX;
 		}
 	}
 }
