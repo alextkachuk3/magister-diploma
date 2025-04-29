@@ -4,6 +4,7 @@
 #include <cmath>
 #include <algorithm>
 #include <numbers>
+#include "Colors.h"
 #include "Typedefs.h"
 #include "Utils.h"
 #include "V2.h"
@@ -21,6 +22,8 @@ private:
 	HDC deviceContext;
 	u32 frameBufferWidth;
 	u32 frameBufferHeight;
+	f32 frameBufferWidthF32;
+	f32 frameBufferHeightF32;
 	f32 aspectRatio;
 	u32* frameBufferPixels;
 	f32* zBuffer;
@@ -32,6 +35,7 @@ private:
 	bool leftMouseButtonPressed = false;
 
 	SamplerType samplerType;
+	V3 borderColor;
 
 	Camera camera;
 

@@ -1,0 +1,20 @@
+#include "Utils.h"
+
+V3 Utils::u32ColorToV3Rgb(const u32 color)
+{
+	return V3(
+		((color >> 16) & 0xFF),
+		((color >> 8) & 0xFF),
+		((color >> 0) & 0xFF)) / 255.0f;
+}
+
+u32 Utils::V3RgbToU32Color(V3 color)
+{
+	color *= 255.0f;
+	return ((u32)0xFF << 24) | ((u32)color.r << 16) | ((u32)color.g << 8) | (u32)color.b;
+}
+
+V3 Utils::Lerp(const V3& A, const V3& B, f32 t)
+{
+	return (1.0f - t) * A + t * B;
+}

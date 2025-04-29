@@ -13,7 +13,7 @@ public:
 	f32 getYaw() const;
 	f32 getPitch() const;
 
-	void setPreviousMousePosition(const V2<f32>& mousePosition);
+	void setPreviousMousePosition(const V2f& mousePosition);
 	void moveYaw(const f32 delta);
 	void movePitch(const f32 delta);
 	void setCameraViewTransform(const M4& cameraViewTransform);
@@ -28,7 +28,7 @@ private:
 	bool previousMousePressed;
 
 	V3 position;
-	V2<f32> previousMousePosition;
+	V2f previousMousePosition;
 
 	M4 cameraViewTransform;
 };

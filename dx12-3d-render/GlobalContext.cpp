@@ -1,4 +1,5 @@
 #include "GlobalContext.h"
+#include "Model.h"
 
 static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -23,7 +24,8 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 	windowClass.lpfnWndProc = Win32WindowCallBack;
 	windowClass.hInstance = hInstance;
 	windowClass.lpszClassName = windowTitle;
-	samplerType = SamplerType::NearestTexel;
+	samplerType = SamplerType::BilinearFiltration;
+	borderColor = Utils::u32ColorToV3Rgb(static_cast<u32>(Colors::Black));
 
 	if (!RegisterClassA(&windowClass)) AssertMsg("Failed to register class!");
 
@@ -50,6 +52,8 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 	Assert(GetClientRect(windowHandle, &clientRect));
 	frameBufferWidth = clientRect.right - clientRect.left;
 	frameBufferHeight = clientRect.bottom - clientRect.top;
+	frameBufferWidthF32 = static_cast<f32>(frameBufferWidth);
+	frameBufferHeightF32 = static_cast<f32>(frameBufferHeight);
 	aspectRatio = f32(frameBufferWidth) / f32(frameBufferHeight);
 
 	frameBufferPixels = new u32[frameBufferWidth * frameBufferHeight];
@@ -74,9 +78,6 @@ void GlobalContext::Run()
 	const f32 speed = 0.75f;
 	f32 currentTime = -2.0f * pi;
 
-	Texture texture(32, 32);
-	texture.generateCheckerboardTexture(1);
-
 	while (isRunning)
 	{
 		LARGE_INTEGER endTime;
@@ -84,7 +85,7 @@ void GlobalContext::Run()
 		f32 frameTime = (f32)(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
 		beginTime = endTime;
 
-		char frameTimeMessage[64];
+		char frameTimeMessage[32];
 		snprintf(frameTimeMessage, sizeof(frameTimeMessage), "FrameTime: %f\n", frameTime);
 		OutputDebugStringA(frameTimeMessage);
 
@@ -110,121 +111,21 @@ void GlobalContext::Run()
 			currentTime -= 2.0f * pi;
 		}
 
-		V3 ModelVertices[] =
+		Model cube;
+		cube.LoadCube();
+
+		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, 0, 0) * M4::Scale(1, 1, 1));
+
+		for (u32 i = 0; i < cube.indices.size(); i += 3)
 		{
-			V3(-0.5f, -0.5f, -0.5f),
-			V3(-0.5f, 0.5f, -0.5f),
-			V3(0.5f, 0.5f, -0.5f),
-			V3(0.5f, -0.5f, -0.5f),
-			V3(-0.5f, -0.5f, 0.5f),
-			V3(-0.5f, 0.5f, 0.5f),
-			V3(0.5f, 0.5f, 0.5f),
-			V3(0.5f, -0.5f, 0.5f),
-		};
+			u32 Index0 = cube.indices[i + 0];
+			u32 Index1 = cube.indices[i + 1];
+			u32 Index2 = cube.indices[i + 2];
 
-		V2f modelUvs[] =
-		{
-			V2f(0.0f, 0.0f),
-			V2f(1.0f, 0.0f),
-			V2f(1.0, 1.0f),
-			V2f(0.0f, 1.0f),
-			V2f(0.0f, 0.0f),
-			V2f(1.0f, 0.0f),
-			V2f(1.0f, 1.0f),
-			V2f(0.0f, 1.0f),
-		};
-
-		u32 ModelIndices[] =
-		{
-			0, 1, 2,
-			2, 3, 0,
-
-			6, 5, 4,
-			4, 7, 6,
-
-			4, 5, 1,
-			1, 0, 4,
-
-			3, 2, 6,
-			6, 7, 3,
-
-			1, 5, 6,
-			6, 2, 1,
-
-			4, 0, 3,
-			3, 7, 4,
-		};
-
-		//V3 ModelVertices[] =
-		//{
-		//	// Front face
-		//	{-0.5f, -0.5f, -0.5f},
-		//	{-0.5f,  0.5f, -0.5f},
-		//	{ 0.5f,  0.5f, -0.5f},
-		//	{ 0.5f, -0.5f, -0.5f},
-
-		//	// Back face
-		//	{ 0.5f, -0.5f,  0.5f},
-		//	{ 0.5f,  0.5f,  0.5f},
-		//	{-0.5f,  0.5f,  0.5f},
-		//	{-0.5f, -0.5f,  0.5f},
-
-		//	// Left face
-		//	{-0.5f, -0.5f,  0.5f},
-		//	{-0.5f,  0.5f,  0.5f},
-		//	{-0.5f,  0.5f, -0.5f},
-		//	{-0.5f, -0.5f, -0.5f},
-
-		//	// Right face
-		//	{ 0.5f, -0.5f, -0.5f},
-		//	{ 0.5f,  0.5f, -0.5f},
-		//	{ 0.5f,  0.5f,  0.5f},
-		//	{ 0.5f, -0.5f,  0.5f},
-
-		//	// Top face
-		//	{-0.5f,  0.5f, -0.5f},
-		//	{-0.5f,  0.5f,  0.5f},
-		//	{ 0.5f,  0.5f,  0.5f},
-		//	{ 0.5f,  0.5f, -0.5f},
-
-		//	// Bottom face
-		//	{-0.5f, -0.5f,  0.5f},
-		//	{-0.5f, -0.5f, -0.5f},
-		//	{ 0.5f, -0.5f, -0.5f},
-		//	{ 0.5f, -0.5f,  0.5f}
-		//};
-
-		//V2 modelUvs[] =
-		//{
-		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Front
-		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Back
-		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Left
-		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Right
-		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Top
-		//	{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}  // Bottom
-		//};
-
-		//u32 ModelIndices[] =
-		//{
-		//	0, 1, 2, 2, 3, 0,       // Front
-		//	4, 5, 6, 6, 7, 4,       // Back
-		//	8, 9,10,10,11, 8,       // Left
-		//   12,13,14,14,15,12,       // Right
-		//   16,17,18,18,19,16,       // Top
-		//   20,21,22,22,23,20        // Bottom
-		//};
-
-		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
-
-		for (u32 i = 0; i < 36; i += 3)
-		{
-			u32 Index0 = ModelIndices[i + 0];
-			u32 Index1 = ModelIndices[i + 1];
-			u32 Index2 = ModelIndices[i + 2];
-
-			DrawTriangle(ModelVertices[Index0], ModelVertices[Index1], ModelVertices[Index2],
-				modelUvs[Index0], modelUvs[Index1], modelUvs[Index2],
-				transform, texture);
+			DrawTriangle(
+				cube.vertices[Index0], cube.vertices[Index1], cube.vertices[Index2],
+				cube.uvs[Index0], cube.uvs[Index1], cube.uvs[Index2],
+				transform, *cube.texture);
 		}
 
 		bool mousePressed = false;
@@ -421,7 +322,7 @@ void GlobalContext::RenderFrame() const
 
 V2f GlobalContext::NdcToBufferCoordinates(V2f NdcPoint) const
 {
-	return V2f(frameBufferWidth, frameBufferHeight) * 0.5f * (NdcPoint + V2f(1.0f, 1.0f));
+	return V2f(frameBufferWidthF32, frameBufferHeightF32) * 0.5f * (NdcPoint + V2f(1.0f, 1.0f));
 }
 
 void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2f& modelUv0, const V2f& modelUv1, const V2f& modelUv2, const M4& transform, const Texture& texture) const
@@ -516,13 +417,47 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 						}
 						else
 						{
-							texelColor = 0xFF800080;
+							texelColor = static_cast<u32>(Colors::Purple);
 						}
 					} break;
 					case SamplerType::BilinearFiltration:
 					{
-						V2f texelV2 = uv * V2f(texture.getWidth(), texture.getHeight()) - V2f(0.5f, 0.5f);
+						V2f texelV2 = uv * V2f((f32)texture.getWidth(), (f32)texture.getHeight()) - V2f(0.5f, 0.5f);
 						
+						const int pointsCount = 4;
+						
+						V2i texelPos[pointsCount] =
+						{
+							V2i((i32)floorf(texelV2.x), (i32)floorf(texelV2.y)),
+							texelPos[0] + V2i(1, 0),
+							texelPos[0] + V2i(0, 1),
+							texelPos[0] + V2i(1, 1),
+						};
+
+						V3 texelColors[pointsCount] = {};
+						for (u32 i = 0; i < pointsCount; ++i)
+						{
+							V2i currentTexelPos = texelPos[i];
+							if (currentTexelPos.x >= 0 && currentTexelPos.x < (i32)texture.getWidth() &&
+								currentTexelPos.y >= 0 && currentTexelPos.y < (i32)texture.getHeight())
+							{
+								texelColors[i] = Utils::u32ColorToV3Rgb(texture[currentTexelPos.y * texture.getWidth() + currentTexelPos.x]);								
+							}
+							else
+							{
+								texelColors[i] = borderColor;
+							}
+
+							f32 s = texelV2.x - floorf(texelV2.x);
+							f32 k = texelV2.y - floorf(texelV2.y);
+
+							V3 interploatedColor0 = Utils::Lerp(texelColors[0], texelColors[1], s);
+							V3 interploatedColor1 = Utils::Lerp(texelColors[2], texelColors[3], s);							
+							V3 color = Utils::Lerp(interploatedColor0, interploatedColor1, k);
+
+							texelColor = Utils::V3RgbToU32Color(color);
+						}
+
 					} break;
 					}
 
