@@ -114,81 +114,8 @@ void GlobalContext::Run()
 				transform, *cube.texture);
 		}
 
-		bool mousePressed = false;
-		V2f currentMousePosition;
-
-		if (GetActiveWindow() == windowHandle)
-		{
-			POINT Win32MousePos = {};
-			Assert(GetCursorPos(&Win32MousePos));
-			Assert(ScreenToClient(windowHandle, &Win32MousePos));
-
-			RECT ClientRect = {};
-			Assert(GetClientRect(windowHandle, &ClientRect));
-
-			Win32MousePos.y = ClientRect.bottom - Win32MousePos.y;
-
-			currentMousePosition.x = f32(Win32MousePos.x) / f32(ClientRect.right - ClientRect.left);
-			currentMousePosition.y = f32(Win32MousePos.y) / f32(ClientRect.bottom - ClientRect.top);
-
-			mousePressed = (GetKeyState(VK_LBUTTON) & 0x80) != 0;
-		}
-
-		if (mousePressed)
-		{
-			if (!camera.getPreviousMousePressed())
-			{
-				camera.setPreviousMousePosition(currentMousePosition);
-			}
-
-			V2 mouseDelta = currentMousePosition - camera.getPreviousMousePosition();
-			camera.movePitch(mouseDelta.y);
-			camera.moveYaw(mouseDelta.x);
-			camera.setPreviousMousePosition(currentMousePosition);
-		}
-
-		camera.setPreviousMousePressed(mousePressed);
-
-		M4 yawTransform = M4::Rotation(0.0f, camera.getYaw(), 0.0f);
-		M4 pitchTransform = M4::Rotation(camera.getPitch(), 0.0f, 0.0f);
-		M4 cameraAxisTransform = yawTransform * pitchTransform;
-
-		V3 right = V3::Normalize((cameraAxisTransform * V4(1.0f, 0.0f, 0.0f, 0.0f)).xyz);
-		V3 up = V3::Normalize((cameraAxisTransform * V4(0.0f, 1.0f, 0.0f, 0.0f)).xyz);
-		V3 lookAt = V3::Normalize((cameraAxisTransform * V4(0.0f, 0.0f, 1.0f, 0.0f)).xyz);
-
-		M4 cameraViewTransform = M4::Identity();
-
-		cameraViewTransform.v[0].x = right.x;
-		cameraViewTransform.v[1].x = right.y;
-		cameraViewTransform.v[2].x = right.z;
-
-		cameraViewTransform.v[0].y = up.x;
-		cameraViewTransform.v[1].y = up.y;
-		cameraViewTransform.v[2].y = up.z;
-
-		cameraViewTransform.v[0].z = lookAt.x;
-		cameraViewTransform.v[1].z = lookAt.y;
-		cameraViewTransform.v[2].z = lookAt.z;
-
-		if (wButtonPressed)
-		{
-			camera.move(lookAt * frameTime);
-		}
-		if (aButtonPressed)
-		{
-			camera.moveReverse(right * frameTime);
-		}
-		if (sButtonPressed)
-		{
-			camera.moveReverse(lookAt * frameTime);
-		}
-		if (dButtonPressed)
-		{
-			camera.move(right * frameTime);
-		}
-
-		camera.setCameraViewTransform(cameraViewTransform);
+		camera.UpdateMouseControl(windowHandle);
+		camera.UpdateViewMatrix(frameTime, wButtonPressed, aButtonPressed, sButtonPressed, dButtonPressed);
 
 		ProcessSystemMessages();
 		RenderFrame();
