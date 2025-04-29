@@ -34,7 +34,6 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 		windowClass.lpszClassName,
 		windowTitle,
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-		//WS_POPUP | WS_VISIBLE,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
 		width,
@@ -56,8 +55,8 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 	frameBufferHeightF32 = static_cast<f32>(frameBufferHeight);
 	aspectRatio = f32(frameBufferWidth) / f32(frameBufferHeight);
 
-	frameBufferPixels = new u32[frameBufferWidth * frameBufferHeight];
-	zBuffer = new f32[frameBufferWidth * frameBufferHeight];
+	frameBufferPixels = std::make_unique<u32[]>(frameBufferWidth * frameBufferHeight);
+	zBuffer = std::make_unique<f32[]>(frameBufferWidth * frameBufferHeight);
 }
 
 GlobalContext::~GlobalContext()
@@ -102,7 +101,7 @@ void GlobalContext::Run()
 
 		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, 0, 0) * M4::Scale(1, 1, 1));
 
-		for (u32 i = 0; i < cube.indices.size(); i += 3)
+		for (size_t i = 0; i < cube.indices.size(); i += 3)
 		{
 			u32 Index0 = cube.indices[i + 0];
 			u32 Index1 = cube.indices[i + 1];
@@ -131,16 +130,9 @@ void GlobalContext::ReleaseResources()
 {
 	if (deviceContext && windowHandle)
 		ReleaseDC(windowHandle, deviceContext);
-	if (frameBufferPixels)
-	{
-		delete[] frameBufferPixels;
-		frameBufferPixels = nullptr;
-	}
-	if (zBuffer)
-	{
-		delete[] zBuffer;
-		zBuffer = nullptr;
-	}
+
+	frameBufferPixels.reset();
+	zBuffer.reset();
 }
 
 void GlobalContext::ProcessSystemMessages()
@@ -226,7 +218,7 @@ void GlobalContext::RenderFrame() const
 		frameBufferWidth, frameBufferHeight,
 		0, 0,
 		frameBufferWidth, frameBufferHeight,
-		frameBufferPixels,
+		frameBufferPixels.get(),
 		&bitmapInfo,
 		DIB_RGB_COLORS,
 		SRCCOPY
@@ -478,6 +470,21 @@ void GlobalContext::ClearBuffers()
 	}
 }
 
+void GlobalContext::Resize(const u32 newWidth, const u32 newHeight)
+{
+	if (newWidth == 0 || newHeight == 0)
+		return;
+
+	frameBufferWidth = newWidth;
+	frameBufferHeight = newHeight;
+	frameBufferWidthF32 = static_cast<f32>(newWidth);
+	frameBufferHeightF32 = static_cast<f32>(newHeight);
+	aspectRatio = frameBufferWidthF32 / frameBufferHeightF32;
+
+	frameBufferPixels = std::make_unique<u32[]>(newWidth * newHeight);
+	zBuffer = std::make_unique<f32[]>(newWidth * newHeight);
+}
+
 HWND GlobalContext::GetWindowHandle() const
 {
 	return windowHandle;
@@ -516,14 +523,4 @@ u32 GlobalContext::GetFrameBufferHeight() const
 void GlobalContext::SetFrameBufferHeight(u32 height)
 {
 	frameBufferHeight = height;
-}
-
-u32* GlobalContext::GetFrameBufferPixels() const
-{
-	return frameBufferPixels;
-}
-
-f32* GlobalContext::GetZBuffer() const
-{
-	return zBuffer;
 }

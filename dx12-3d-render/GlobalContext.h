@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Windows.h>
+#include <memory>
 #include <cmath>
 #include <algorithm>
 #include <numbers>
@@ -25,8 +26,8 @@ private:
 	f32 frameBufferWidthF32;
 	f32 frameBufferHeightF32;
 	f32 aspectRatio;
-	u32* frameBufferPixels;
-	f32* zBuffer;
+	std::unique_ptr<u32[]> frameBufferPixels;
+	std::unique_ptr<f32[]> zBuffer;
 
 	bool wButtonPressed = false;
 	bool aButtonPressed = false;
@@ -58,6 +59,7 @@ public:
 	void DrawTriangle(const V3& ModelVertex0, const V3& ModelVertex1, const V3& ModelVertex2, const V3& ModelColor0, const V3& ModelColor1, const V3& ModelColor2, const M4& Transform) const;
 
 	void ClearBuffers();
+	void Resize(const u32 newWidth, const u32 newHeight);
 
 	HWND GetWindowHandle() const;
 	void SetWindowHandle(HWND handle);
@@ -70,7 +72,4 @@ public:
 
 	u32 GetFrameBufferHeight() const;
 	void SetFrameBufferHeight(u32 height);
-
-	u32* GetFrameBufferPixels() const;
-	f32* GetZBuffer() const;
 };

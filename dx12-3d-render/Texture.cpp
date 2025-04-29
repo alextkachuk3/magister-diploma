@@ -3,12 +3,7 @@
 Texture::Texture(u32 width, u32 height)
 	: width(width), height(height)
 {
-	texels = new u32[width * height];
-}
-
-Texture::~Texture()
-{
-	delete[] texels;
+	texels = std::make_unique<u32[]>(width * height);
 }
 
 u32 Texture::getWidth() const
@@ -19,11 +14,6 @@ u32 Texture::getWidth() const
 u32 Texture::getHeight() const  
 {  
    return height;  
-}
-
-u32* Texture::getTexels() const
-{
-	return texels;
 }
 
 u32 Texture::operator[](const u32 index) const
