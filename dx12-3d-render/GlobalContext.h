@@ -21,11 +21,12 @@
 #include "ClipResult.h"
 #include "ClipVertex.h"
 #include "ModelLoader.h"
+#include "FrameTimeLogger.h"
 
 class GlobalContext
 {
 private:
-	HWND windowHandle;
+	HWND windowHandle;	
 	HDC deviceContext;
 	u32 frameBufferWidth;
 	u32 frameBufferHeight;
@@ -34,6 +35,9 @@ private:
 	f32 aspectRatio;
 	std::unique_ptr<u32[]> frameBufferPixels;
 	std::unique_ptr<f32[]> zBuffer;
+
+	FrameTimeLogger frameTimeLogger;
+
 	static GlobalContext* activeInstance;
 
 	bool wButtonPressed = false;

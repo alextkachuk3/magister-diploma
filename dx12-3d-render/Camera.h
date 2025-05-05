@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Windows.h>
 #include "V3.h"
 #include "M4.h"
@@ -21,7 +22,6 @@ public:
 
 	void move(const V3& direction);
 	void moveReverse(const V3& direction);
-
 	
 private:
 	f32 yaw = 0.0f;

@@ -136,6 +136,7 @@
     <ClInclude Include="ClipVertex.h" />
     <ClInclude Include="Colors.h" />
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="FrameTimeLogger.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="SamplerType.h" />
@@ -153,6 +154,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ClipResult.cpp" />
     <ClCompile Include="ClipVertex.cpp" />
+    <ClCompile Include="FrameTimeLogger.cpp" />
     <ClCompile Include="GlobalContext.cpp" />
     <ClCompile Include="M4.cpp" />
     <ClCompile Include="main.cpp" />

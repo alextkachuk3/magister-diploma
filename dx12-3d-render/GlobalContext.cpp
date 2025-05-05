@@ -105,9 +105,7 @@ void GlobalContext::Run()
 		f32 frameTime = static_cast<f32>(endTime.QuadPart - beginTime.QuadPart) / static_cast<f32>(timerFrequency.QuadPart);
 		beginTime = endTime;
 
-		char frameTimeMessage[32];
-		snprintf(frameTimeMessage, sizeof(frameTimeMessage), "FrameTime: %f\n", frameTime);
-		OutputDebugStringA(frameTimeMessage);
+		frameTimeLogger.LogFrameTime(frameTime);
 
 		ClearBuffers();
 
@@ -115,10 +113,10 @@ void GlobalContext::Run()
 		if (currentTime > 2.0f * Constants::PI)
 		{
 			currentTime -= 2.0f * Constants::PI;
-		}		
+		}
 
 		M4 transform = M4::Perspective(aspectRatio, 1.57f, 0.01f, 2000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 2) * M4::Rotation(0, 0, 0) * M4::Scale(1.0f, 1.0f, 1.0f);
-		
+
 		for (const auto& mesh : scene.meshes)
 		{
 			RenderModel(mesh, transform);
@@ -329,7 +327,7 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 		pointA - pointC
 	};
 
-	bool isTopLeft[] = 
+	bool isTopLeft[] =
 	{
 		(edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),
 		(edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),
@@ -343,20 +341,20 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 	v2.uv *= v2.position.w;
 
 	f32 edgesDiffX[] =
-	{ 
+	{
 		edges[0].y,
 		edges[1].y,
-		edges[2].y 
+		edges[2].y
 	};
 
-	f32 edgesDiffY[] = 
+	f32 edgesDiffY[] =
 	{
 		-edges[0].x,
 		-edges[1].x,
-		-edges[2].x 
+		-edges[2].x
 	};
 
-	f32 edgesRowY[] = 
+	f32 edgesRowY[] =
 	{
 		V2f::CrossProduct(V2f(minX, minY) - pointA, edges[0]),
 		V2f::CrossProduct(V2f(minX, minY) - pointB, edges[1]),
@@ -378,7 +376,7 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 				f32 t0 = -edgesRowX[1] / barycentricDiv;
 				f32 t1 = -edgesRowX[2] / barycentricDiv;
 				f32 t2 = -edgesRowX[0] / barycentricDiv;
-				
+
 				f32 depth = v0.position.z + t1 * (v1.position.z - v0.position.z) + t2 * (v2.position.z - v0.position.z);
 
 				if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])
