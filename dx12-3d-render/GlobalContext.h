@@ -20,6 +20,7 @@
 #include "Constants.h"
 #include "ClipResult.h"
 #include "ClipVertex.h"
+#include "ModelLoader.h"
 
 class GlobalContext
 {

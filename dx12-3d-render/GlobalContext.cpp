@@ -114,9 +114,10 @@ void GlobalContext::Run()
 		}
 
 		Model cube;
-		cube.LoadCube();
+		//cube.LoadCube();
+		cube = ModelLoader::LoadModelFromFile("./3d_models/Duck/Duck.gltf");
 
-		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 2) * M4::Rotation(currentTime, 0, 0) * M4::Scale(1, 1, 1));
+		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 2) * M4::Rotation(0, 0, 0) * M4::Scale(0.01, 0.01, 0.01));
 
 		RenderModel(cube, transform);
 

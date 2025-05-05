@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Resource Files\Duck">
+      <UniqueIdentifier>{9f01609c-6198-4629-a51f-f9d48879c3e1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Utils.h">
@@ -63,6 +66,9 @@
     <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ModelLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -101,5 +107,21 @@
     <ClCompile Include="ClipResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ModelLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="3d_models\Duck\Duck0.bin">
+      <Filter>Resource Files\Duck</Filter>
+    </None>
+    <None Include="3d_models\Duck\Duck.gltf">
+      <Filter>Resource Files\Duck</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="3d_models\Duck\DuckCM.png">
+      <Filter>Resource Files\Duck</Filter>
+    </Image>
   </ItemGroup>
 </Project>
