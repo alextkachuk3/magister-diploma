@@ -64,7 +64,7 @@ public:
 	V2f NdcToBufferCoordinates(V2f NdcPoint) const;
 	void RenderModel(const Model& model, const M4& modelTransform) const;
 
-	void DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVertex Vertex2, const Texture& texture) const;
+	void DrawTriangle(const ClipVertex& vertex0, const ClipVertex& vertex1, const ClipVertex& vertex2, const Texture& texture) const;
 	void DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1, const V4& ModelVertex2, const V2f& ModelUv0, const V2f& ModelUv1, const V2f& ModelUv2, const Texture& Texture) const;
 	
 	void ClearBuffers();

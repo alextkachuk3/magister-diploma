@@ -31,7 +31,7 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 	windowClass.hInstance = hInstance;
 	windowClass.lpszClassName = windowTitle;
 	samplerType = SamplerType::BilinearFiltration;
-	samplerType = SamplerType::NearestTexel;
+	//samplerType = SamplerType::NearestTexel;
 	borderColor = Utils::u32ColorToV3Rgb(Colors::Black);
 
 	if (!RegisterClassA(&windowClass)) AssertMsg("Failed to register class!");
@@ -295,94 +295,79 @@ void GlobalContext::DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1,
 	}
 }
 
-void GlobalContext::DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVertex Vertex2, const Texture& texture) const
+void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& vertex1, const ClipVertex& vertex2, const Texture& texture) const
 {
-	Vertex0.position.w = 1.0f / Vertex0.position.w;
-	Vertex1.position.w = 1.0f / Vertex1.position.w;
-	Vertex2.position.w = 1.0f / Vertex2.position.w;
+	ClipVertex v0 = vertex0;
+	ClipVertex v1 = vertex1;
+	ClipVertex v2 = vertex2;
 
-	Vertex0.position.xyz *= Vertex0.position.w;
-	Vertex1.position.xyz *= Vertex1.position.w;
-	Vertex2.position.xyz *= Vertex2.position.w;
+	v0.position.w = 1.0f / v0.position.w;
+	v1.position.w = 1.0f / v1.position.w;
+	v2.position.w = 1.0f / v2.position.w;
 
-	V2f pointA = NdcToBufferCoordinates(Vertex0.position.xy);
-	V2f pointB = NdcToBufferCoordinates(Vertex1.position.xy);
-	V2f pointC = NdcToBufferCoordinates(Vertex2.position.xy);
+	v0.position.xyz *= v0.position.w;
+	v1.position.xyz *= v1.position.w;
+	v2.position.xyz *= v2.position.w;
+
+	V2f pointA = NdcToBufferCoordinates(v0.position.xy);
+	V2f pointB = NdcToBufferCoordinates(v1.position.xy);
+	V2f pointC = NdcToBufferCoordinates(v2.position.xy);
 
 	i32 minX = std::max(0, (i32)floorf(std::min({ pointA.x, pointB.x, pointC.x })));
 	i32 maxX = std::min((i32)frameBufferWidth - 1, (i32)ceilf(std::max({ pointA.x, pointB.x, pointC.x })));
 	i32 minY = std::max(0, (i32)floorf(std::min({ pointA.y, pointB.y, pointC.y })));
 	i32 maxY = std::min((i32)frameBufferHeight - 1, (i32)ceilf(std::max({ pointA.y, pointB.y, pointC.y })));
 
-	V2f edges[] =
-	{
+	V2f edges[] = {
 		pointB - pointA,
 		pointC - pointB,
 		pointA - pointC
 	};
 
-	bool isTopLeft[] =
-	{
-		(edges[0].x >= 0.0f && edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),
-		(edges[1].x >= 0.0f && edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),
-		(edges[2].x >= 0.0f && edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)
+	bool isTopLeft[] = {
+		(edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),
+		(edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),
+		(edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)
 	};
 
 	f32 barycentricDiv = V2f::CrossProduct(pointB - pointA, pointC - pointA);
 
-	Vertex0.uv *= Vertex0.position.w;
-	Vertex1.uv *= Vertex1.position.w;
-	Vertex2.uv *= Vertex2.position.w;
+	v0.uv *= v0.position.w;
+	v1.uv *= v1.position.w;
+	v2.uv *= v2.position.w;
 
-	f32 edgesDiffX[] =
-	{
-		edges[0].y,
-		edges[1].y,
-		edges[2].y,
-	};
+	f32 edgesDiffX[] = { edges[0].y, edges[1].y, edges[2].y };
+	f32 edgesDiffY[] = { -edges[0].x, -edges[1].x, -edges[2].x };
 
-	f32 edgesDiffY[] =
-	{
-		-edges[0].x,
-		-edges[1].x,
-		-edges[2].x,
-	};
-
-	f32 edgesRowY[] =
-	{
+	f32 edgesRowY[] = {
 		V2f::CrossProduct(V2f(minX, minY) - pointA, edges[0]),
 		V2f::CrossProduct(V2f(minX, minY) - pointB, edges[1]),
-		V2f::CrossProduct(V2f(minX, minY) - pointC, edges[2]),
+		V2f::CrossProduct(V2f(minX, minY) - pointC, edges[2])
 	};
 
 	for (i32 y = minY; y <= maxY; ++y)
 	{
-		f32 edges[] =
-		{
-			edgesRowY[0],
-			edgesRowY[1],
-			edgesRowY[2],
-		};
+		f32 edgesRowX[] = { edgesRowY[0], edgesRowY[1], edgesRowY[2] };
 
 		for (i32 x = minX; x <= maxX; ++x)
 		{
-			if ((edges[0] > 0.0f || (isTopLeft[0] && edges[0] == 0.0f)) &&
-				(edges[1] > 0.0f || (isTopLeft[1] && edges[1] == 0.0f)) &&
-				(edges[2] > 0.0f || (isTopLeft[2] && edges[2] == 0.0f)))
+			if ((edgesRowX[0] > 0.0f || (isTopLeft[0] && edgesRowX[0] == 0.0f)) &&
+				(edgesRowX[1] > 0.0f || (isTopLeft[1] && edgesRowX[1] == 0.0f)) &&
+				(edgesRowX[2] > 0.0f || (isTopLeft[2] && edgesRowX[2] == 0.0f)))
 			{
 				u32 pixelIndex = y * frameBufferWidth + x;
 
-				f32 t0 = -edges[1] / barycentricDiv;
-				f32 t1 = -edges[2] / barycentricDiv;
-				f32 t2 = -edges[0] / barycentricDiv;
+				f32 t0 = -edgesRowX[1] / barycentricDiv;
+				f32 t1 = -edgesRowX[2] / barycentricDiv;
+				f32 t2 = -edgesRowX[0] / barycentricDiv;
 
-				f32 depth = t0 * Vertex0.position.z + t1 * Vertex1.position.z + t2 * Vertex2.position.z;
+				f32 depth = t0 * v0.position.z + t1 * v1.position.z + t2 * v2.position.z;
 
 				if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])
 				{
-					f32 oneOverW = t0 * Vertex0.position.w + t1 * Vertex1.position.w + t2 * Vertex2.position.w;
+					f32 oneOverW = t0 * v0.position.w + t1 * v1.position.w + t2 * v2.position.w;
 
-					V2f uv = t0 * Vertex0.uv + t1 * Vertex1.uv + t2 * Vertex2.uv;
+					V2f uv = t0 * v0.uv + t1 * v1.uv + t2 * v2.uv;
 					uv /= oneOverW;
 
 					u32 texelColor = 0;
@@ -391,8 +376,8 @@ void GlobalContext::DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVer
 					{
 					case SamplerType::NearestTexel:
 					{
-						i32 texelX = (i32)floorf(uv.x * i32(texture.getWidth() + 0.5f));
-						i32 texelY = (i32)floorf(uv.y * i32(texture.getHeight() + 0.5f));
+						i32 texelX = (i32)floorf(uv.x * texture.getWidth());
+						i32 texelY = (i32)floorf(uv.y * texture.getHeight());
 
 						if (texelX >= 0 && texelX < (i32)texture.getWidth() &&
 							texelY >= 0 && texelY < (i32)texture.getHeight())
@@ -404,44 +389,43 @@ void GlobalContext::DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVer
 							texelColor = Colors::Purple;
 						}
 					} break;
+
 					case SamplerType::BilinearFiltration:
 					{
 						V2f texelV2 = uv * V2f((f32)texture.getWidth(), (f32)texture.getHeight()) - V2f(0.5f, 0.5f);
 
 						const int pointsCount = 4;
 
-						V2i texelPos[pointsCount] =
-						{
+						V2i texelPos[pointsCount] = {
 							V2i((i32)floorf(texelV2.x), (i32)floorf(texelV2.y)),
-							texelPos[0] + V2i(1, 0),
-							texelPos[0] + V2i(0, 1),
-							texelPos[0] + V2i(1, 1),
+							V2i((i32)floorf(texelV2.x) + 1, (i32)floorf(texelV2.y)),
+							V2i((i32)floorf(texelV2.x), (i32)floorf(texelV2.y) + 1),
+							V2i((i32)floorf(texelV2.x) + 1, (i32)floorf(texelV2.y) + 1),
 						};
 
 						V3 texelColors[pointsCount] = {};
 						for (u32 i = 0; i < pointsCount; ++i)
 						{
-							V2i currentTexelPos = texelPos[i];
-							if (currentTexelPos.x >= 0 && currentTexelPos.x < (i32)texture.getWidth() &&
-								currentTexelPos.y >= 0 && currentTexelPos.y < (i32)texture.getHeight())
+							const V2i& pos = texelPos[i];
+							if (pos.x >= 0 && pos.x < (i32)texture.getWidth() &&
+								pos.y >= 0 && pos.y < (i32)texture.getHeight())
 							{
-								texelColors[i] = Utils::u32ColorToV3Rgb(texture[currentTexelPos.y * texture.getWidth() + currentTexelPos.x]);
+								texelColors[i] = Utils::u32ColorToV3Rgb(texture[pos.y * texture.getWidth() + pos.x]);
 							}
 							else
 							{
 								texelColors[i] = borderColor;
 							}
-
-							f32 s = texelV2.x - floorf(texelV2.x);
-							f32 k = texelV2.y - floorf(texelV2.y);
-
-							V3 interploatedColor0 = Utils::Lerp(texelColors[0], texelColors[1], s);
-							V3 interploatedColor1 = Utils::Lerp(texelColors[2], texelColors[3], s);
-							V3 color = Utils::Lerp(interploatedColor0, interploatedColor1, k);
-
-							texelColor = Utils::V3RgbToU32Color(color);
 						}
 
+						f32 s = texelV2.x - floorf(texelV2.x);
+						f32 k = texelV2.y - floorf(texelV2.y);
+
+						V3 interploatedColor0 = Utils::Lerp(texelColors[0], texelColors[1], s);
+						V3 interploatedColor1 = Utils::Lerp(texelColors[2], texelColors[3], s);
+						V3 color = Utils::Lerp(interploatedColor0, interploatedColor1, k);
+
+						texelColor = Utils::V3RgbToU32Color(color);
 					} break;
 					}
 
@@ -449,9 +433,9 @@ void GlobalContext::DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVer
 					zBuffer[pixelIndex] = depth;
 				}
 			}
-			edges[0] += edgesDiffX[0];
-			edges[1] += edgesDiffX[1];
-			edges[2] += edgesDiffX[2];
+			edgesRowX[0] += edgesDiffX[0];
+			edgesRowX[1] += edgesDiffX[1];
+			edgesRowX[2] += edgesDiffX[2];
 		}
 		edgesRowY[0] += edgesDiffY[0];
 		edgesRowY[1] += edgesDiffY[1];
