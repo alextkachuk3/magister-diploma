@@ -53,3 +53,67 @@ Model ModelLoader::LoadModelFromFile(const std::string& modelPath, const std::st
 
 	return model;
 }
+
+SceneModel ModelLoader::LoadSceneModelFromFile(const std::string& modelPath, const std::string& textureDir)
+{
+	Assimp::Importer importer;
+
+	const aiScene* scene = importer.ReadFile(
+		modelPath,
+		aiProcess_Triangulate |
+		aiProcess_GenNormals |
+		aiProcess_CalcTangentSpace |
+		aiProcess_FlipUVs |
+		aiProcess_JoinIdenticalVertices);
+
+	if (!scene || !scene->mRootNode || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE))
+	{
+		AssertMsg("Failed to load scene");
+	}
+
+	SceneModel sceneModel;
+
+	for (u32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
+	{
+		aiMesh* mesh = scene->mMeshes[meshIndex];
+		Model model;
+
+		for (u32 i = 0; i < mesh->mNumVertices; ++i)
+		{
+			model.vertices.push_back(ConvertVector(mesh->mVertices[i]));
+			if (mesh->HasTextureCoords(0))
+				model.uvs.push_back(ConvertUV(mesh->mTextureCoords[0][i]));
+			else
+				model.uvs.emplace_back(0.0f, 0.0f);
+		}
+
+		for (u32 i = 0; i < mesh->mNumFaces; ++i)
+		{
+			const aiFace& face = mesh->mFaces[i];
+			for (u32 j = 0; j < face.mNumIndices; ++j)
+			{
+				model.indices.push_back(face.mIndices[j]);
+			}
+		}
+
+		if (scene->HasMaterials() && mesh->mMaterialIndex >= 0)
+		{
+			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+			aiString texPath;
+
+			if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
+			{
+				std::string fullTexPath = textureDir + "/" + std::string(texPath.C_Str());
+				model.texture = Texture::LoadFromFile(fullTexPath);
+			}
+			else
+			{
+				model.texture = Texture::generateCheckerboardTexture(64, 64, 8);
+			}
+		}
+
+		sceneModel.meshes.push_back(std::move(model));
+	}
+
+	return sceneModel;
+}

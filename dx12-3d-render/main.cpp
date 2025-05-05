@@ -9,7 +9,7 @@
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
-    GlobalContext globalContext(hInstance, "Render", 1920, 1080);
+    GlobalContext globalContext(hInstance, "Render", 1280, 720);
 
 	globalContext.Run();
 

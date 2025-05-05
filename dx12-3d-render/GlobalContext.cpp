@@ -31,8 +31,7 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 	windowClass.hInstance = hInstance;
 	windowClass.lpszClassName = windowTitle;
 	samplerType = SamplerType::BilinearFiltration;
-	//samplerType = SamplerType::NearestTexel;
-	borderColor = Utils::u32ColorToV3Rgb(Colors::Black);
+	borderColor = Utils::u32ColorToV3Rgb(Colors::Green);
 
 	if (!RegisterClassA(&windowClass)) AssertMsg("Failed to register class!");
 
@@ -94,6 +93,11 @@ void GlobalContext::Run()
 	const f32 speed = 0.75f;
 	f32 currentTime = -2.0f * Constants::PI;
 
+	Model cube;
+	cube.LoadCube();
+	Model duck = ModelLoader::LoadModelFromFile("./assets/duck/Duck.gltf", "./assets/duck/textures/DuckCM.png");
+	SceneModel scene = ModelLoader::LoadSceneModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
+
 	while (isRunning)
 	{
 		LARGE_INTEGER endTime;
@@ -111,16 +115,14 @@ void GlobalContext::Run()
 		if (currentTime > 2.0f * Constants::PI)
 		{
 			currentTime -= 2.0f * Constants::PI;
+		}		
+
+		M4 transform = M4::Perspective(aspectRatio, 1.57f, 0.01f, 2000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 2) * M4::Rotation(0, 0, 0) * M4::Scale(1.0f, 1.0f, 1.0f);
+		
+		for (const auto& mesh : scene.meshes)
+		{
+			RenderModel(mesh, transform);
 		}
-
-		Model cube;
-		cube.LoadCube();
-
-		Model duck = ModelLoader::LoadModelFromFile("./3d_models/Duck/Duck.gltf", "./3d_models/Duck/DuckCM.png");
-
-		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 2) * M4::Rotation(0, currentTime, 0) * M4::Scale(0.01f, 0.01f, 0.01f));
-
-		RenderModel(duck, transform);
 
 		camera.UpdateMouseControl(windowHandle);
 		camera.UpdateViewMatrix(frameTime, wButtonPressed, aButtonPressed, sButtonPressed, dButtonPressed);
@@ -376,8 +378,8 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 				f32 t0 = -edgesRowX[1] / barycentricDiv;
 				f32 t1 = -edgesRowX[2] / barycentricDiv;
 				f32 t2 = -edgesRowX[0] / barycentricDiv;
-
-				f32 depth = t0 * v0.position.z + t1 * v1.position.z + t2 * v2.position.z;
+				
+				f32 depth = v0.position.z + t1 * (v1.position.z - v0.position.z) + t2 * (v2.position.z - v0.position.z);
 
 				if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])
 				{
@@ -385,6 +387,9 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 
 					V2f uv = t0 * v0.uv + t1 * v1.uv + t2 * v2.uv;
 					uv /= oneOverW;
+
+					uv.x = uv.x - floorf(uv.x);
+					uv.y = uv.y - floorf(uv.y);
 
 					u32 texelColor = 0;
 

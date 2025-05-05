@@ -67,14 +67,16 @@ void Camera::UpdateViewMatrix(f32 frameTime, bool wPressed, bool aPressed, bool 
 	V3 up = V3::Normalize((axisTransform * V4(0.0f, 1.0f, 0.0f, 0.0f)).xyz);
 	V3 lookAt = V3::Normalize((axisTransform * V4(0.0f, 0.0f, 1.0f, 0.0f)).xyz);
 
+	f32 speed = frameTime * 50.0f;
+
 	if (wPressed)
-		move(lookAt * frameTime);
+		move(lookAt * speed);
 	if (aPressed)
-		moveReverse(right * frameTime);
+		moveReverse(right * speed);
 	if (sPressed)
-		moveReverse(lookAt * frameTime);
+		moveReverse(lookAt * speed);
 	if (dPressed)
-		move(right * frameTime);
+		move(right * speed);
 
 	cameraViewTransform = M4::Identity();
 	cameraViewTransform.v[0].x = right.x;
