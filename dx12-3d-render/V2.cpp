@@ -40,6 +40,14 @@ V2<T> V2<T>::operator/(const T scalar) const
 }
 
 template<typename T>
+V2<T>& V2<T>::operator*=(const T scalar)
+{
+    x *= scalar;
+    y *= scalar;
+    return *this;
+}
+
+template<typename T>
 V2<T>& V2<T>::operator/=(const T scalar)
 {
     x /= scalar;

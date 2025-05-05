@@ -8,6 +8,6 @@ enum class ClipAxis
 	Top,
 	Bottom,
 	Near,
-	FAR,
+	Far,
 	W
 };

@@ -22,6 +22,7 @@ union V2
 	V2<T> operator*(const T scalar) const;
 	V2<T> operator*(const V2& other) const;
 	V2<T> operator/(const T scalar) const;
+	V2<T>& operator*=(const T scalar);
 	V2<T>& operator/=(const T scalar);
 
 	inline friend V2 operator*(const T scalar, const V2<T>& v2)

@@ -16,6 +16,22 @@
 #include "Texture.h"
 #include "Model.h"
 #include "SamplerType.h"
+#include "ClipAxis.h"
+
+constexpr f32 W_CLIPPING_PLANE = 0.0001f;
+constexpr u32 CLIP_MAX_VERTICES = 384;
+
+struct ClipVertex
+{
+	V4 position;
+	V2f uv;
+};
+
+struct ClipResult
+{
+	u32 numberOfTriangles;
+	ClipVertex vertices[CLIP_MAX_VERTICES];
+};
 
 class GlobalContext
 {
@@ -36,13 +52,12 @@ private:
 	bool sButtonPressed = false;
 	bool dButtonPressed = false;
 	bool leftMouseButtonPressed = false;
+	bool isRunning;
 
 	SamplerType samplerType;
 	V3 borderColor;
-
 	Camera camera;
 
-	static bool isRunning;
 	static const f32 pi;
 
 public:
@@ -54,6 +69,7 @@ public:
 
 	void Run();
 	static void Stop();
+	void StopInternal();
 
 	void ReleaseResources();
 	void ProcessSystemMessages();
@@ -61,7 +77,9 @@ public:
 	void RenderFrame() const;
 	V2f NdcToBufferCoordinates(V2f NdcPoint) const;
 	void RenderModel(const Model& model, const M4& modelTransform) const;
-	void DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2f& modelUv0, const V2f& modelUv1, const V2f& modelUv2, const M4& transform, const Texture& texture) const;
+
+	void DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVertex Vertex2, const Texture& texture) const;
+	void DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1, const V4& ModelVertex2, const V2f& ModelUv0, const V2f& ModelUv1, const V2f& ModelUv2, const Texture& Texture) const;
 	void DrawTriangle(const V3& ModelVertex0, const V3& ModelVertex1, const V3& ModelVertex2, const V3& ModelColor0, const V3& ModelColor1, const V3& ModelColor2, const M4& Transform) const;
 
 	void ClearBuffers();

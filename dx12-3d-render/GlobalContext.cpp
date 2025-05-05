@@ -20,9 +20,225 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 	}
 }
 
+bool isBehindPlane(ClipVertex Vertex, ClipAxis Axis)
+{
+	bool Result = false;
+
+	switch (Axis)
+	{
+		using enum ClipAxis;
+	case Left:
+	{
+		Result = Vertex.position.x < -Vertex.position.w;
+	} break;
+	case Right:
+	{
+		Result = Vertex.position.x > Vertex.position.w;
+	} break;
+	case Top:
+	{
+		Result = Vertex.position.y > Vertex.position.w;
+	} break;
+	case Bottom:
+	{
+		Result = Vertex.position.y < -Vertex.position.w;
+	} break;
+	case Near:
+	{
+		Result = Vertex.position.z < 0;
+	} break;
+	case Far:
+	{
+		Result = Vertex.position.z > Vertex.position.w;
+	} break;
+	case W:
+	{
+		Result = Vertex.position.w < W_CLIPPING_PLANE;
+	} break;
+	default:
+	{
+		AssertMsg("Invalid clip axis");
+	} break;
+	}
+
+	return Result;
+}
+
+ClipVertex calculateIntersection(ClipVertex Start, ClipVertex End, ClipAxis Axis)
+{
+	ClipVertex Result = {};
+
+	f32 S = 0.0f;
+	switch (Axis)
+	{
+		using enum ClipAxis;
+	case Left:
+	{
+		S = -(Start.position.w + Start.position.x) / ((End.position.x - Start.position.x) + (End.position.w - Start.position.w));
+	} break;
+	case Right:
+	{
+		S = (Start.position.w - Start.position.x) / ((End.position.x - Start.position.x) - (End.position.w - Start.position.w));
+	} break;
+	case Top:
+	{
+		S = (Start.position.w - Start.position.y) / ((End.position.y - Start.position.y) - (End.position.w - Start.position.w));
+	} break;
+	case Bottom:
+	{
+		S = -(Start.position.w + Start.position.y) / ((End.position.y - Start.position.y) + (End.position.w - Start.position.w));
+	} break;
+	case Near:
+	{
+		S = -Start.position.z / (End.position.z - Start.position.z);
+	} break;
+	case Far:
+	{
+		S = (Start.position.w - Start.position.z) / ((End.position.z - Start.position.z) - (End.position.w - Start.position.w));
+	} break;
+	case W:
+	{
+		S = (W_CLIPPING_PLANE - Start.position.w) / (End.position.w - Start.position.w);
+	} break;
+	default:
+	{
+		AssertMsg("Invalid clip axis");
+	} break;
+	}
+
+	Result.position = (1.0f - S) * Start.position + S * End.position;
+	Result.uv = (1.0f - S) * Start.uv + S * End.uv;
+
+	return Result;
+}
+
+void ClipPolygonToAxis(ClipResult* input, ClipResult* output, const ClipAxis clipAxis)
+{
+	output->numberOfTriangles = 0;
+
+	for (u32 triangleId = 0; triangleId < input->numberOfTriangles; ++triangleId)
+	{
+		u32 vertexId[] =
+		{
+			3 * triangleId + 0,
+			3 * triangleId + 1,
+			3 * triangleId + 2
+		};
+
+		ClipVertex vertexPos[] =
+		{
+			input->vertices[vertexId[0]],
+			input->vertices[vertexId[1]],
+			input->vertices[vertexId[2]]
+		};
+
+		bool behindPlane[] =
+		{
+			isBehindPlane(vertexPos[0], clipAxis),
+			isBehindPlane(vertexPos[1], clipAxis),
+			isBehindPlane(vertexPos[2], clipAxis)
+		};
+
+		u32 numBehindPlane = behindPlane[0] + behindPlane[1] + behindPlane[2];
+
+		switch (numBehindPlane)
+		{
+		case 0:
+		{
+			output->vertices[3 * output->numberOfTriangles + 0] = vertexPos[0];
+			output->vertices[3 * output->numberOfTriangles + 1] = vertexPos[1];
+			output->vertices[3* output->numberOfTriangles + 2] = vertexPos[2];
+			output->numberOfTriangles++;
+		} break;
+		case 1:
+		{
+			u32 CurrTriangleId = output->numberOfTriangles;
+			u32 CurrVertexId = 0;
+			bool IsTriangleAdded = false;
+			output->numberOfTriangles += 2;
+
+			for (u32 EdgeId = 0; EdgeId < 3; ++EdgeId)
+			{
+				u32 StartVertexId = EdgeId;
+				u32 EndVertexId = EdgeId == 2 ? 0 : (EdgeId + 1);
+
+				ClipVertex StartVertex = vertexPos[StartVertexId];
+				ClipVertex EndVertex = vertexPos[EndVertexId];
+
+				bool StartBehindPlane = behindPlane[StartVertexId];
+				bool EndBehindPlane = behindPlane[EndVertexId];
+
+				if (!StartBehindPlane)
+				{
+					output->vertices[3 * CurrTriangleId + CurrVertexId++] = StartVertex;
+				}
+
+				if (!IsTriangleAdded && CurrVertexId == 3)
+				{
+					IsTriangleAdded = true;
+					CurrTriangleId += 1;
+					CurrVertexId = 0;
+					output->vertices[3 * CurrTriangleId + CurrVertexId++] = output->vertices[3 * (CurrTriangleId - 1) + 0];
+					output->vertices[3 * CurrTriangleId + CurrVertexId++] = output->vertices[3 * (CurrTriangleId - 1) + 2];
+				}
+
+				if (StartBehindPlane != EndBehindPlane)
+				{
+					output->vertices[3 * CurrTriangleId + CurrVertexId++] = calculateIntersection(StartVertex, EndVertex, clipAxis);
+				}
+
+				if (!IsTriangleAdded && CurrVertexId == 3)
+				{
+					IsTriangleAdded = true;
+					CurrTriangleId += 1;
+					CurrVertexId = 0;
+					output->vertices[3 * CurrTriangleId + CurrVertexId++] = output->vertices[3 * (CurrTriangleId - 1) + 0];
+					output->vertices[3 * CurrTriangleId + CurrVertexId++] = output->vertices[3 * (CurrTriangleId - 1) + 2];
+				}
+			}
+		} break;
+
+		case 2:
+		{
+			u32 CurrTriangleId = output->numberOfTriangles++;
+			u32 CurrVertexId = 0;
+
+			for (u32 EdgeId = 0; EdgeId < 3; ++EdgeId)
+			{
+				u32 StartVertexId = EdgeId;
+				u32 EndVertexId = EdgeId == 2 ? 0 : (EdgeId + 1);
+
+				ClipVertex StartVertex = vertexPos[StartVertexId];
+				ClipVertex EndVertex = vertexPos[EndVertexId];
+
+				bool StartBehindPlane = behindPlane[StartVertexId];
+				bool EndBehindPlane = behindPlane[EndVertexId];
+
+				if (!StartBehindPlane)
+				{
+					output->vertices[3 * CurrTriangleId + CurrVertexId++] = StartVertex;
+				}
+
+				if (StartBehindPlane != EndBehindPlane)
+				{
+					output->vertices[3 * CurrTriangleId + CurrVertexId++] = calculateIntersection(StartVertex, EndVertex, clipAxis);
+				}
+			}
+		} break;
+		case 3:
+		{
+			// All vertices are behind the plane, do nothing
+		} break;
+		default:
+		{
+			AssertMsg("Invalid number of vertices behind the plane");
+		} break;
+		}
+	}
+}
+
 GlobalContext* GlobalContext::activeInstance(nullptr);
 const f32 GlobalContext::pi(std::numbers::pi_v<f32>);
-bool GlobalContext::isRunning(false);
 
 GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height)
 {
@@ -77,7 +293,7 @@ void GlobalContext::SetActiveInstance(GlobalContext* instance)
 	activeInstance = instance;
 }
 
-GlobalContext* GlobalContext::GetActiveInstance() 
+GlobalContext* GlobalContext::GetActiveInstance()
 {
 	return activeInstance;
 }
@@ -117,7 +333,7 @@ void GlobalContext::Run()
 		Model cube;
 		cube.LoadCube();
 
-		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 3) * M4::Rotation(currentTime, 0, 0) * M4::Scale(1, 1, 1));
+		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 2) * M4::Rotation(currentTime, 0, 0) * M4::Scale(1, 1, 1));
 
 		RenderModel(cube, transform);
 
@@ -130,6 +346,14 @@ void GlobalContext::Run()
 }
 
 void GlobalContext::Stop()
+{
+	if (activeInstance)
+	{
+		activeInstance->StopInternal();
+	}
+}
+
+void GlobalContext::StopInternal()
 {
 	isRunning = false;
 }
@@ -240,42 +464,64 @@ V2f GlobalContext::NdcToBufferCoordinates(V2f NdcPoint) const
 
 void GlobalContext::RenderModel(const Model& model, const M4& modelTransform) const
 {
+	V4* TransformedVertices = new V4[model.vertices.size()];
+	for (u32 VertexId = 0; VertexId < model.vertices.size(); ++VertexId)
+	{
+		TransformedVertices[VertexId] = (modelTransform * V4(model.vertices[VertexId], 1.0f));
+	}
+
 	for (size_t i = 0; i < model.indices.size(); i += 3)
 	{
 		u32 Index0 = model.indices[i + 0];
 		u32 Index1 = model.indices[i + 1];
-		u32 Index2 = model.indices[i + 2];
+		u32 Index2 = model.indices[i + 2];		
 
 		DrawTriangle(
-			model.vertices[Index0], model.vertices[Index1], model.vertices[Index2],
-			model.uvs[Index0], model.uvs[Index1], model.uvs[Index2],
-			modelTransform, *model.texture);
+			TransformedVertices[Index0], TransformedVertices[Index1], TransformedVertices[Index2],
+			model.uvs[Index0], model.uvs[Index1], model.uvs[Index2], *model.texture);
+	}
+
+	delete[] TransformedVertices;
+}
+
+void GlobalContext::DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1, const V4& ModelVertex2, const V2f& ModelUv0, const V2f& ModelUv1, const V2f& ModelUv2, const Texture& Texture) const
+{
+	ClipResult Ping = {};
+	Ping.numberOfTriangles = 1;
+	Ping.vertices[0] = { ModelVertex0, ModelUv0 };
+	Ping.vertices[1] = { ModelVertex1, ModelUv1 };
+	Ping.vertices[2] = { ModelVertex2, ModelUv2 };
+
+	ClipResult Pong = {};
+
+	ClipPolygonToAxis(&Ping, &Pong, ClipAxis::Left);
+	ClipPolygonToAxis(&Pong, &Ping, ClipAxis::Right);
+	ClipPolygonToAxis(&Ping, &Pong, ClipAxis::Top);
+	ClipPolygonToAxis(&Pong, &Ping, ClipAxis::Bottom);
+	ClipPolygonToAxis(&Ping, &Pong, ClipAxis::Near);
+	ClipPolygonToAxis(&Pong, &Ping, ClipAxis::Far);
+	ClipPolygonToAxis(&Ping, &Pong, ClipAxis::W);
+
+	for (u32 TriangleId = 0; TriangleId < Pong.numberOfTriangles; ++TriangleId)
+	{
+		DrawTriangle(Pong.vertices[3 * TriangleId + 0], Pong.vertices[3 * TriangleId + 1], Pong.vertices[3 * TriangleId + 2], Texture);
 	}
 }
 
-void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V2f& modelUv0, const V2f& modelUv1, const V2f& modelUv2, const M4& transform, const Texture& texture) const
+void GlobalContext::DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVertex Vertex2, const Texture& texture) const
 {
-	V4 transformedPoint0 = transform * V4(modelVertex0, 1.0f);
-	V4 transformedPoint1 = transform * V4(modelVertex1, 1.0f);
-	V4 transformedPoint2 = transform * V4(modelVertex2, 1.0f);
+	Vertex0.position.xyz /= Vertex0.position.w;
+	Vertex1.position.xyz /= Vertex1.position.w;
+	Vertex2.position.xyz /= Vertex2.position.w;
 
-	transformedPoint0.xyz /= transformedPoint0.w;
-	transformedPoint1.xyz /= transformedPoint1.w;
-	transformedPoint2.xyz /= transformedPoint2.w;
+	V2f pointA = NdcToBufferCoordinates(Vertex0.position.xy);
+	V2f pointB = NdcToBufferCoordinates(Vertex1.position.xy);
+	V2f pointC = NdcToBufferCoordinates(Vertex2.position.xy);
 
-	V2f pointA = NdcToBufferCoordinates(transformedPoint0.xy);
-	V2f pointB = NdcToBufferCoordinates(transformedPoint1.xy);
-	V2f pointC = NdcToBufferCoordinates(transformedPoint2.xy);
-
-	i32 minX = (i32)min(min(pointA.x, pointB.x), pointC.x);
-	i32 maxX = (i32)ceil(max(max(pointA.x, pointB.x), pointC.x));
-	i32 minY = (i32)min(min(pointA.y, pointB.y), pointC.y);
-	i32 maxY = (i32)ceil(max(max(pointA.y, pointB.y), pointC.y));
-
-	minX = std::clamp(minX, 0, (i32)frameBufferWidth - 1);
-	maxX = std::clamp(maxX, 0, (i32)frameBufferWidth - 1);
-	minY = std::clamp(minY, 0, (i32)frameBufferHeight - 1);
-	maxY = std::clamp(maxY, 0, (i32)frameBufferHeight - 1);
+	i32 minX = min(min((i32)pointA.x, (i32)pointB.x), (i32)pointC.x);
+	i32 maxX = max(max((i32)round(pointA.x), (i32)round(pointB.x)), (i32)round(pointC.x));
+	i32 minY = min(min((i32)pointA.y, (i32)pointB.y), (i32)pointC.y);
+	i32 maxY = max(max((i32)round(pointA.y), (i32)round(pointB.y)), (i32)round(pointC.y));
 
 	V2f edges[] =
 	{
@@ -323,13 +569,16 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 				f32 t1 = -crossLengths[2] / barycentricDiv;
 				f32 t2 = -crossLengths[0] / barycentricDiv;
 
-				f32 depth = t0 * transformedPoint0.z + t1 * transformedPoint1.z + t2 * transformedPoint2.z;
+				f32 depth = t0 * Vertex0.position.z + t1 * Vertex1.position.z + t2 * Vertex2.position.z;
+
 				if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])
 				{
-					V2f uv = (t0 * modelUv0 / transformedPoint0.w) + (t1 * modelUv1 / transformedPoint1.w) + (t2 * modelUv2 / transformedPoint2.w);
-					uv /= (t0 / transformedPoint0.w + t1 / transformedPoint1.w + t2 / transformedPoint2.w);
+					f32 OneOverW = t0 * (1.0f / Vertex0.position.w) + t1 * (1.0f / Vertex1.position.w) + t2 * (1.0f / Vertex2.position.w);
+					
+					V2f uv = t0 * (Vertex0.uv / Vertex0.position.w) + t1 * (Vertex1.uv / Vertex1.position.w) + t2 * (Vertex2.uv / Vertex2.position.w);
+					uv /= OneOverW;
 
-					u32 texelColor;
+					u32 texelColor = 0;
 
 					switch (samplerType)
 					{
@@ -351,9 +600,9 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 					case SamplerType::BilinearFiltration:
 					{
 						V2f texelV2 = uv * V2f((f32)texture.getWidth(), (f32)texture.getHeight()) - V2f(0.5f, 0.5f);
-						
+
 						const int pointsCount = 4;
-						
+
 						V2i texelPos[pointsCount] =
 						{
 							V2i((i32)floorf(texelV2.x), (i32)floorf(texelV2.y)),
@@ -369,7 +618,7 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 							if (currentTexelPos.x >= 0 && currentTexelPos.x < (i32)texture.getWidth() &&
 								currentTexelPos.y >= 0 && currentTexelPos.y < (i32)texture.getHeight())
 							{
-								texelColors[i] = Utils::u32ColorToV3Rgb(texture[currentTexelPos.y * texture.getWidth() + currentTexelPos.x]);								
+								texelColors[i] = Utils::u32ColorToV3Rgb(texture[currentTexelPos.y * texture.getWidth() + currentTexelPos.x]);
 							}
 							else
 							{
@@ -380,7 +629,7 @@ void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1,
 							f32 k = texelV2.y - floorf(texelV2.y);
 
 							V3 interploatedColor0 = Utils::Lerp(texelColors[0], texelColors[1], s);
-							V3 interploatedColor1 = Utils::Lerp(texelColors[2], texelColors[3], s);							
+							V3 interploatedColor1 = Utils::Lerp(texelColors[2], texelColors[3], s);
 							V3 color = Utils::Lerp(interploatedColor0, interploatedColor1, k);
 
 							texelColor = Utils::V3RgbToU32Color(color);
@@ -495,7 +744,7 @@ void GlobalContext::ClearBuffers()
 
 void GlobalContext::Resize(u32 newWidth, u32 newHeight)
 {
-	if (activeInstance) 
+	if (activeInstance)
 	{
 		activeInstance->ResizeInternal(newWidth, newHeight);
 	}

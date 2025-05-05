@@ -30,7 +30,10 @@ union V4
 	V4();
 	V4(const f32 X, const f32 Y, const f32 Z, const f32 W);
 	V4(const V3& v3, const f32 W);
+	V4(const V3& v3);
 
 	V4 operator+(const V4& B) const;
 	V4 operator*(const f32 B) const;
+
+	friend V4 operator*(const f32 scalar, const V4& v4);
 };
