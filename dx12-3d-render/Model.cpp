@@ -1,6 +1,5 @@
 #include "Model.h"
 
-
 void Model::LoadCube()
 {
 	vertices = {
@@ -30,7 +29,6 @@ void Model::LoadCube()
 		20, 21, 22, 22, 23, 20  // Bottom
 	};
 
-	texture = std::make_unique<Texture>(16, 16);
-	texture->generateCheckerboardTexture(2);
+	texture = Texture::generateCheckerboardTexture(16, 16, 2);
 }
 

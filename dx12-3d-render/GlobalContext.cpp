@@ -114,12 +114,13 @@ void GlobalContext::Run()
 		}
 
 		Model cube;
-		//cube.LoadCube();
-		cube = ModelLoader::LoadModelFromFile("./3d_models/Duck/Duck.gltf");
+		cube.LoadCube();
 
-		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 2) * M4::Rotation(0, 0, 0) * M4::Scale(0.01, 0.01, 0.01));
+		Model duck = ModelLoader::LoadModelFromFile("./3d_models/Duck/Duck.gltf", "./3d_models/Duck/DuckCM.png");
 
-		RenderModel(cube, transform);
+		M4 transform = (M4::Perspective(aspectRatio, 1.57f, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 2) * M4::Rotation(0, currentTime, 0) * M4::Scale(0.01f, 0.01f, 0.01f));
+
+		RenderModel(duck, transform);
 
 		camera.UpdateMouseControl(windowHandle);
 		camera.UpdateViewMatrix(frameTime, wButtonPressed, aButtonPressed, sButtonPressed, dButtonPressed);
@@ -262,7 +263,7 @@ void GlobalContext::RenderModel(const Model& model, const M4& modelTransform) co
 
 		DrawTriangle(
 			TransformedVertices[Index0], TransformedVertices[Index1], TransformedVertices[Index2],
-			model.uvs[Index0], model.uvs[Index1], model.uvs[Index2], *model.texture);
+			model.uvs[Index0], model.uvs[Index1], model.uvs[Index2], model.texture);
 	}
 
 	delete[] TransformedVertices;
@@ -319,13 +320,15 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 	i32 minY = std::max(0, (i32)floorf(std::min({ pointA.y, pointB.y, pointC.y })));
 	i32 maxY = std::min((i32)frameBufferHeight - 1, (i32)ceilf(std::max({ pointA.y, pointB.y, pointC.y })));
 
-	V2f edges[] = {
+	V2f edges[] =
+	{
 		pointB - pointA,
 		pointC - pointB,
 		pointA - pointC
 	};
 
-	bool isTopLeft[] = {
+	bool isTopLeft[] = 
+	{
 		(edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),
 		(edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),
 		(edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)
@@ -337,10 +340,22 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 	v1.uv *= v1.position.w;
 	v2.uv *= v2.position.w;
 
-	f32 edgesDiffX[] = { edges[0].y, edges[1].y, edges[2].y };
-	f32 edgesDiffY[] = { -edges[0].x, -edges[1].x, -edges[2].x };
+	f32 edgesDiffX[] =
+	{ 
+		edges[0].y,
+		edges[1].y,
+		edges[2].y 
+	};
 
-	f32 edgesRowY[] = {
+	f32 edgesDiffY[] = 
+	{
+		-edges[0].x,
+		-edges[1].x,
+		-edges[2].x 
+	};
+
+	f32 edgesRowY[] = 
+	{
 		V2f::CrossProduct(V2f(minX, minY) - pointA, edges[0]),
 		V2f::CrossProduct(V2f(minX, minY) - pointB, edges[1]),
 		V2f::CrossProduct(V2f(minX, minY) - pointC, edges[2])
