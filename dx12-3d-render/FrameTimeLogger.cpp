@@ -4,7 +4,7 @@
 
 std::string FrameTimeLogger::GenerateUniqueFileName()
 {
-	const std::string folder = "log";
+	const std::filesystem::path folder = "log";
 
 	if (!std::filesystem::exists(folder))
 	{
@@ -12,14 +12,14 @@ std::string FrameTimeLogger::GenerateUniqueFileName()
 	}
 
 	int index = 0;
-	std::string fileName;
+	std::filesystem::path fileName;
 
 	do
 	{
-		fileName = std::format("{}/frametime_log_{}.txt", folder, index++);
+		fileName = folder / std::format("frametime_log_{}.txt", ++index);
 	} while (std::filesystem::exists(fileName));
 
-	return fileName;
+	return fileName.string();
 }
 
 FrameTimeLogger::FrameTimeLogger()
