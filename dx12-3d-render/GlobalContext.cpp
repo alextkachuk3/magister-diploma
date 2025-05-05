@@ -31,6 +31,7 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 	windowClass.hInstance = hInstance;
 	windowClass.lpszClassName = windowTitle;
 	samplerType = SamplerType::BilinearFiltration;
+	samplerType = SamplerType::NearestTexel;
 	borderColor = Utils::u32ColorToV3Rgb(Colors::Black);
 
 	if (!RegisterClassA(&windowClass)) AssertMsg("Failed to register class!");
@@ -256,7 +257,7 @@ void GlobalContext::RenderModel(const Model& model, const M4& modelTransform) co
 	{
 		u32 Index0 = model.indices[i + 0];
 		u32 Index1 = model.indices[i + 1];
-		u32 Index2 = model.indices[i + 2];		
+		u32 Index2 = model.indices[i + 2];
 
 		DrawTriangle(
 			TransformedVertices[Index0], TransformedVertices[Index1], TransformedVertices[Index2],
@@ -296,18 +297,22 @@ void GlobalContext::DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1,
 
 void GlobalContext::DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVertex Vertex2, const Texture& texture) const
 {
-	Vertex0.position.xyz /= Vertex0.position.w;
-	Vertex1.position.xyz /= Vertex1.position.w;
-	Vertex2.position.xyz /= Vertex2.position.w;
+	Vertex0.position.w = 1.0f / Vertex0.position.w;
+	Vertex1.position.w = 1.0f / Vertex1.position.w;
+	Vertex2.position.w = 1.0f / Vertex2.position.w;
+
+	Vertex0.position.xyz *= Vertex0.position.w;
+	Vertex1.position.xyz *= Vertex1.position.w;
+	Vertex2.position.xyz *= Vertex2.position.w;
 
 	V2f pointA = NdcToBufferCoordinates(Vertex0.position.xy);
 	V2f pointB = NdcToBufferCoordinates(Vertex1.position.xy);
 	V2f pointC = NdcToBufferCoordinates(Vertex2.position.xy);
 
-	i32 minX = min(min((i32)pointA.x, (i32)pointB.x), (i32)pointC.x);
-	i32 maxX = max(max((i32)round(pointA.x), (i32)round(pointB.x)), (i32)round(pointC.x));
-	i32 minY = min(min((i32)pointA.y, (i32)pointB.y), (i32)pointC.y);
-	i32 maxY = max(max((i32)round(pointA.y), (i32)round(pointB.y)), (i32)round(pointC.y));
+	i32 minX = std::max(0, (i32)floorf(std::min({ pointA.x, pointB.x, pointC.x })));
+	i32 maxX = std::min((i32)frameBufferWidth - 1, (i32)ceilf(std::max({ pointA.x, pointB.x, pointC.x })));
+	i32 minY = std::max(0, (i32)floorf(std::min({ pointA.y, pointB.y, pointC.y })));
+	i32 maxY = std::min((i32)frameBufferHeight - 1, (i32)ceilf(std::max({ pointA.y, pointB.y, pointC.y })));
 
 	V2f edges[] =
 	{
@@ -325,44 +330,60 @@ void GlobalContext::DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVer
 
 	f32 barycentricDiv = V2f::CrossProduct(pointB - pointA, pointC - pointA);
 
-	for (i32 Y = minY; Y <= maxY; ++Y)
+	Vertex0.uv *= Vertex0.position.w;
+	Vertex1.uv *= Vertex1.position.w;
+	Vertex2.uv *= Vertex2.position.w;
+
+	f32 edgesDiffX[] =
 	{
-		for (i32 X = minX; X <= maxX; ++X)
+		edges[0].y,
+		edges[1].y,
+		edges[2].y,
+	};
+
+	f32 edgesDiffY[] =
+	{
+		-edges[0].x,
+		-edges[1].x,
+		-edges[2].x,
+	};
+
+	f32 edgesRowY[] =
+	{
+		V2f::CrossProduct(V2f(minX, minY) - pointA, edges[0]),
+		V2f::CrossProduct(V2f(minX, minY) - pointB, edges[1]),
+		V2f::CrossProduct(V2f(minX, minY) - pointC, edges[2]),
+	};
+
+	for (i32 y = minY; y <= maxY; ++y)
+	{
+		f32 edges[] =
 		{
-			V2f pixelPoint = V2f((f32)X, (f32)Y) + V2f(0.5f, 0.5f);
+			edgesRowY[0],
+			edgesRowY[1],
+			edgesRowY[2],
+		};
 
-			V2f pixelEdges[] =
+		for (i32 x = minX; x <= maxX; ++x)
+		{
+			if ((edges[0] > 0.0f || (isTopLeft[0] && edges[0] == 0.0f)) &&
+				(edges[1] > 0.0f || (isTopLeft[1] && edges[1] == 0.0f)) &&
+				(edges[2] > 0.0f || (isTopLeft[2] && edges[2] == 0.0f)))
 			{
-				pixelPoint - pointA,
-				pixelPoint - pointB,
-				pixelPoint - pointC
-			};
+				u32 pixelIndex = y * frameBufferWidth + x;
 
-			f32 crossLengths[] =
-			{
-				V2f::CrossProduct(pixelEdges[0], edges[0]),
-				V2f::CrossProduct(pixelEdges[1], edges[1]),
-				V2f::CrossProduct(pixelEdges[2], edges[2])
-			};
-
-			if ((crossLengths[0] > 0.0f || (isTopLeft[0] && crossLengths[0] == 0.0f)) &&
-				(crossLengths[1] > 0.0f || (isTopLeft[1] && crossLengths[1] == 0.0f)) &&
-				(crossLengths[2] > 0.0f || (isTopLeft[2] && crossLengths[2] == 0.0f)))
-			{
-				u32 pixelIndex = Y * frameBufferWidth + X;
-
-				f32 t0 = -crossLengths[1] / barycentricDiv;
-				f32 t1 = -crossLengths[2] / barycentricDiv;
-				f32 t2 = -crossLengths[0] / barycentricDiv;
+				f32 t0 = -edges[1] / barycentricDiv;
+				f32 t1 = -edges[2] / barycentricDiv;
+				f32 t2 = -edges[0] / barycentricDiv;
 
 				f32 depth = t0 * Vertex0.position.z + t1 * Vertex1.position.z + t2 * Vertex2.position.z;
 
 				if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])
 				{
-					f32 OneOverW = t0 * (1.0f / Vertex0.position.w) + t1 * (1.0f / Vertex1.position.w) + t2 * (1.0f / Vertex2.position.w);
-					
-					V2f uv = t0 * (Vertex0.uv / Vertex0.position.w) + t1 * (Vertex1.uv / Vertex1.position.w) + t2 * (Vertex2.uv / Vertex2.position.w);
-					uv /= OneOverW;
+					f32 oneOverW = t0 * Vertex0.position.w + t1 * Vertex1.position.w + t2 * Vertex2.position.w;
+
+					V2f uv = t0 * Vertex0.uv + t1 * Vertex1.uv + t2 * Vertex2.uv;
+					uv /= oneOverW;
 
 					u32 texelColor = 0;
 
@@ -370,8 +391,8 @@ void GlobalContext::DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVer
 					{
 					case SamplerType::NearestTexel:
 					{
-						i32 texelX = (i32)floorf(uv.x * i32(texture.getWidth() - 1));
-						i32 texelY = (i32)floorf(uv.y * i32(texture.getHeight() - 1));
+						i32 texelX = (i32)floorf(uv.x * i32(texture.getWidth() + 0.5f));
+						i32 texelY = (i32)floorf(uv.y * i32(texture.getHeight() + 0.5f));
 
 						if (texelX >= 0 && texelX < (i32)texture.getWidth() &&
 							texelY >= 0 && texelY < (i32)texture.getHeight())
@@ -428,90 +449,13 @@ void GlobalContext::DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVer
 					zBuffer[pixelIndex] = depth;
 				}
 			}
+			edges[0] += edgesDiffX[0];
+			edges[1] += edgesDiffX[1];
+			edges[2] += edgesDiffX[2];
 		}
-	}
-}
-
-void GlobalContext::DrawTriangle(const V3& modelVertex0, const V3& modelVertex1, const V3& modelVertex2, const V3& modelColor0, const V3& modelColor1, const V3& modelColor2, const M4& transform) const
-{
-	V4 transformedPoint0 = transform * V4(modelVertex0, 1.0f);
-	V4 transformedPoint1 = transform * V4(modelVertex1, 1.0f);
-	V4 transformedPoint2 = transform * V4(modelVertex2, 1.0f);
-
-	transformedPoint0.xyz /= transformedPoint0.w;
-	transformedPoint1.xyz /= transformedPoint1.w;
-	transformedPoint2.xyz /= transformedPoint2.w;
-
-	V2 pointA = NdcToBufferCoordinates(transformedPoint0.xy);
-	V2 pointB = NdcToBufferCoordinates(transformedPoint1.xy);
-	V2 pointC = NdcToBufferCoordinates(transformedPoint2.xy);
-
-	i32 minX = (i32)min(min(pointA.x, pointB.x), pointC.x);
-	i32 maxX = (i32)ceil(max(max(pointA.x, pointB.x), pointC.x));
-	i32 minY = (i32)min(min(pointA.y, pointB.y), pointC.y);
-	i32 maxY = (i32)ceil(max(max(pointA.y, pointB.y), pointC.y));
-
-	minX = std::clamp(minX, 0, (i32)frameBufferWidth - 1);
-	maxX = std::clamp(maxX, 0, (i32)frameBufferWidth - 1);
-	minY = std::clamp(minY, 0, (i32)frameBufferHeight - 1);
-	maxY = std::clamp(maxY, 0, (i32)frameBufferHeight - 1);
-
-	V2f edges[] =
-	{
-		pointB - pointA,
-		pointC - pointB,
-		pointA - pointC
-	};
-
-	bool isTopLeft[] =
-	{
-		(edges[0].x >= 0.0f && edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),
-		(edges[1].x >= 0.0f && edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),
-		(edges[2].x >= 0.0f && edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)
-	};
-
-	f32 barycentricDiv = V2f::CrossProduct(pointB - pointA, pointC - pointA);
-
-	for (i32 Y = minY; Y <= maxY; ++Y)
-	{
-		for (i32 X = minX; X <= maxX; ++X)
-		{
-			V2f pixelPoint = V2((f32)X, (f32)Y) + V2(0.5f, 0.5f);
-
-			V2f pixelEdges[] =
-			{
-				pixelPoint - pointA,
-				pixelPoint - pointB,
-				pixelPoint - pointC
-			};
-
-			f32 crossLengths[] =
-			{
-				V2f::CrossProduct(pixelEdges[0], edges[0]),
-				V2f::CrossProduct(pixelEdges[1], edges[1]),
-				V2f::CrossProduct(pixelEdges[2], edges[2])
-			};
-
-			if ((crossLengths[0] > 0.0f || (isTopLeft[0] && crossLengths[0] == 0.0f)) &&
-				(crossLengths[1] > 0.0f || (isTopLeft[1] && crossLengths[1] == 0.0f)) &&
-				(crossLengths[2] > 0.0f || (isTopLeft[2] && crossLengths[2] == 0.0f)))
-			{
-				u32 pixelIndex = Y * frameBufferWidth + X;
-
-				f32 t0 = -crossLengths[1] / barycentricDiv;
-				f32 t1 = -crossLengths[2] / barycentricDiv;
-				f32 t2 = -crossLengths[0] / barycentricDiv;
-
-				f32 depth = t0 * transformedPoint0.z + t1 * transformedPoint1.z + t2 * transformedPoint2.z;
-				if (depth >= 0.0f && depth <= 1.0f && depth < zBuffer[pixelIndex])
-				{
-					V3 finalColor = (t0 * modelColor0 + t1 * modelColor1 + t2 * modelColor2) * 255.0f;
-					frameBufferPixels[pixelIndex] = ((u32)0xFF << 24) | ((u32)finalColor.r << 16) | ((u32)finalColor.g << 8) | (u32)finalColor.b;
-
-					zBuffer[pixelIndex] = depth;
-				}
-			}
-		}
+		edgesRowY[0] += edgesDiffY[0];
+		edgesRowY[1] += edgesDiffY[1];
+		edgesRowY[2] += edgesDiffY[2];
 	}
 }
 

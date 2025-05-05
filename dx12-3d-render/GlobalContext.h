@@ -1,5 +1,6 @@
 #pragma once
 
+#define NOMINMAX
 #include <Windows.h>
 #include <memory>
 #include <cmath>
@@ -65,8 +66,7 @@ public:
 
 	void DrawTriangle(ClipVertex Vertex0, ClipVertex Vertex1, ClipVertex Vertex2, const Texture& texture) const;
 	void DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1, const V4& ModelVertex2, const V2f& ModelUv0, const V2f& ModelUv1, const V2f& ModelUv2, const Texture& Texture) const;
-	void DrawTriangle(const V3& ModelVertex0, const V3& ModelVertex1, const V3& ModelVertex2, const V3& ModelColor0, const V3& ModelColor1, const V3& ModelColor2, const M4& Transform) const;
-
+	
 	void ClearBuffers();
 	static void Resize(const u32 newWidth, const u32 newHeight);
 	void ResizeInternal(u32 newWidth, u32 newHeight);
