@@ -1,5 +1,4 @@
 #include "GlobalContext.h"
-#include "ClipResult.h"
 
 static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -22,7 +21,6 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 }
 
 GlobalContext* GlobalContext::activeInstance(nullptr);
-const f32 GlobalContext::pi(std::numbers::pi_v<f32>);
 
 GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height)
 {
@@ -93,7 +91,7 @@ void GlobalContext::Run()
 	QueryPerformanceCounter(&beginTime);
 
 	const f32 speed = 0.75f;
-	f32 currentTime = -2.0f * pi;
+	f32 currentTime = -2.0f * Constants::PI;
 
 	while (isRunning)
 	{
@@ -109,9 +107,9 @@ void GlobalContext::Run()
 		ClearBuffers();
 
 		currentTime += frameTime * speed;
-		if (currentTime > 2.0f * pi)
+		if (currentTime > 2.0f * Constants::PI)
 		{
-			currentTime -= 2.0f * pi;
+			currentTime -= 2.0f * Constants::PI;
 		}
 
 		Model cube;

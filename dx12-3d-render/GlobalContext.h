@@ -4,7 +4,6 @@
 #include <memory>
 #include <cmath>
 #include <algorithm>
-#include <numbers>
 #include "Colors.h"
 #include "Typedefs.h"
 #include "Utils.h"
@@ -45,8 +44,6 @@ private:
 	SamplerType samplerType;
 	V3 borderColor;
 	Camera camera;
-
-	static const f32 pi;
 
 public:
 	GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height);

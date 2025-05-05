@@ -13,7 +13,7 @@ bool ClipVertex::IsBehindPlane(ClipAxis axis) const
 	case Bottom: return position.y < -position.w;
 	case Near:   return position.z < 0;
 	case Far:    return position.z > position.w;
-	case W:      return position.w < Constant::W_CLIPPING_PLANE;
+	case W:      return position.w < Constants::W_CLIPPING_PLANE;
 	default:     return false;
 	}
 }
@@ -32,7 +32,7 @@ ClipVertex ClipVertex::IntersectWith(const ClipVertex& other, ClipAxis axis) con
 	case Bottom: S = -(position.w + position.y) / ((other.position.y - position.y) + (other.position.w - position.w)); break;
 	case Near:   S = -position.z / (other.position.z - position.z); break;
 	case Far:    S = (position.w - position.z) / ((other.position.z - position.z) - (other.position.w - position.w)); break;
-	case W:      S = (Constant::W_CLIPPING_PLANE - position.w) / (other.position.w - position.w); break;
+	case W:      S = (Constants::W_CLIPPING_PLANE - position.w) / (other.position.w - position.w); break;
 	}
 
 	result.position = (1.0f - S) * position + S * other.position;
