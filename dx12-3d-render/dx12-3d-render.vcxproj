@@ -132,7 +132,10 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ClipAxis.h" />
+    <ClInclude Include="ClipResult.h" />
+    <ClInclude Include="ClipVertex.h" />
     <ClInclude Include="Colors.h" />
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="SamplerType.h" />
     <ClInclude Include="Texture.h" />
@@ -146,6 +149,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ClipResult.cpp" />
+    <ClCompile Include="ClipVertex.cpp" />
     <ClCompile Include="GlobalContext.cpp" />
     <ClCompile Include="M4.cpp" />
     <ClCompile Include="main.cpp" />

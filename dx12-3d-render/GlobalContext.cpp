@@ -1,4 +1,5 @@
 #include "GlobalContext.h"
+#include "ClipResult.h"
 
 static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -17,223 +18,6 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 	}
 	default:
 		return DefWindowProcA(windowHandle, message, wParam, lParam);
-	}
-}
-
-bool isBehindPlane(ClipVertex Vertex, ClipAxis Axis)
-{
-	bool Result = false;
-
-	switch (Axis)
-	{
-		using enum ClipAxis;
-	case Left:
-	{
-		Result = Vertex.position.x < -Vertex.position.w;
-	} break;
-	case Right:
-	{
-		Result = Vertex.position.x > Vertex.position.w;
-	} break;
-	case Top:
-	{
-		Result = Vertex.position.y > Vertex.position.w;
-	} break;
-	case Bottom:
-	{
-		Result = Vertex.position.y < -Vertex.position.w;
-	} break;
-	case Near:
-	{
-		Result = Vertex.position.z < 0;
-	} break;
-	case Far:
-	{
-		Result = Vertex.position.z > Vertex.position.w;
-	} break;
-	case W:
-	{
-		Result = Vertex.position.w < W_CLIPPING_PLANE;
-	} break;
-	default:
-	{
-		AssertMsg("Invalid clip axis");
-	} break;
-	}
-
-	return Result;
-}
-
-ClipVertex calculateIntersection(ClipVertex Start, ClipVertex End, ClipAxis Axis)
-{
-	ClipVertex Result = {};
-
-	f32 S = 0.0f;
-	switch (Axis)
-	{
-		using enum ClipAxis;
-	case Left:
-	{
-		S = -(Start.position.w + Start.position.x) / ((End.position.x - Start.position.x) + (End.position.w - Start.position.w));
-	} break;
-	case Right:
-	{
-		S = (Start.position.w - Start.position.x) / ((End.position.x - Start.position.x) - (End.position.w - Start.position.w));
-	} break;
-	case Top:
-	{
-		S = (Start.position.w - Start.position.y) / ((End.position.y - Start.position.y) - (End.position.w - Start.position.w));
-	} break;
-	case Bottom:
-	{
-		S = -(Start.position.w + Start.position.y) / ((End.position.y - Start.position.y) + (End.position.w - Start.position.w));
-	} break;
-	case Near:
-	{
-		S = -Start.position.z / (End.position.z - Start.position.z);
-	} break;
-	case Far:
-	{
-		S = (Start.position.w - Start.position.z) / ((End.position.z - Start.position.z) - (End.position.w - Start.position.w));
-	} break;
-	case W:
-	{
-		S = (W_CLIPPING_PLANE - Start.position.w) / (End.position.w - Start.position.w);
-	} break;
-	default:
-	{
-		AssertMsg("Invalid clip axis");
-	} break;
-	}
-
-	Result.position = (1.0f - S) * Start.position + S * End.position;
-	Result.uv = (1.0f - S) * Start.uv + S * End.uv;
-
-	return Result;
-}
-
-void ClipPolygonToAxis(ClipResult* input, ClipResult* output, const ClipAxis clipAxis)
-{
-	output->numberOfTriangles = 0;
-
-	for (u32 triangleId = 0; triangleId < input->numberOfTriangles; ++triangleId)
-	{
-		u32 vertexId[] =
-		{
-			3 * triangleId + 0,
-			3 * triangleId + 1,
-			3 * triangleId + 2
-		};
-
-		ClipVertex vertexPos[] =
-		{
-			input->vertices[vertexId[0]],
-			input->vertices[vertexId[1]],
-			input->vertices[vertexId[2]]
-		};
-
-		bool behindPlane[] =
-		{
-			isBehindPlane(vertexPos[0], clipAxis),
-			isBehindPlane(vertexPos[1], clipAxis),
-			isBehindPlane(vertexPos[2], clipAxis)
-		};
-
-		u32 numBehindPlane = behindPlane[0] + behindPlane[1] + behindPlane[2];
-
-		switch (numBehindPlane)
-		{
-		case 0:
-		{
-			output->vertices[3 * output->numberOfTriangles + 0] = vertexPos[0];
-			output->vertices[3 * output->numberOfTriangles + 1] = vertexPos[1];
-			output->vertices[3* output->numberOfTriangles + 2] = vertexPos[2];
-			output->numberOfTriangles++;
-		} break;
-		case 1:
-		{
-			u32 CurrTriangleId = output->numberOfTriangles;
-			u32 CurrVertexId = 0;
-			bool IsTriangleAdded = false;
-			output->numberOfTriangles += 2;
-
-			for (u32 EdgeId = 0; EdgeId < 3; ++EdgeId)
-			{
-				u32 StartVertexId = EdgeId;
-				u32 EndVertexId = EdgeId == 2 ? 0 : (EdgeId + 1);
-
-				ClipVertex StartVertex = vertexPos[StartVertexId];
-				ClipVertex EndVertex = vertexPos[EndVertexId];
-
-				bool StartBehindPlane = behindPlane[StartVertexId];
-				bool EndBehindPlane = behindPlane[EndVertexId];
-
-				if (!StartBehindPlane)
-				{
-					output->vertices[3 * CurrTriangleId + CurrVertexId++] = StartVertex;
-				}
-
-				if (!IsTriangleAdded && CurrVertexId == 3)
-				{
-					IsTriangleAdded = true;
-					CurrTriangleId += 1;
-					CurrVertexId = 0;
-					output->vertices[3 * CurrTriangleId + CurrVertexId++] = output->vertices[3 * (CurrTriangleId - 1) + 0];
-					output->vertices[3 * CurrTriangleId + CurrVertexId++] = output->vertices[3 * (CurrTriangleId - 1) + 2];
-				}
-
-				if (StartBehindPlane != EndBehindPlane)
-				{
-					output->vertices[3 * CurrTriangleId + CurrVertexId++] = calculateIntersection(StartVertex, EndVertex, clipAxis);
-				}
-
-				if (!IsTriangleAdded && CurrVertexId == 3)
-				{
-					IsTriangleAdded = true;
-					CurrTriangleId += 1;
-					CurrVertexId = 0;
-					output->vertices[3 * CurrTriangleId + CurrVertexId++] = output->vertices[3 * (CurrTriangleId - 1) + 0];
-					output->vertices[3 * CurrTriangleId + CurrVertexId++] = output->vertices[3 * (CurrTriangleId - 1) + 2];
-				}
-			}
-		} break;
-
-		case 2:
-		{
-			u32 CurrTriangleId = output->numberOfTriangles++;
-			u32 CurrVertexId = 0;
-
-			for (u32 EdgeId = 0; EdgeId < 3; ++EdgeId)
-			{
-				u32 StartVertexId = EdgeId;
-				u32 EndVertexId = EdgeId == 2 ? 0 : (EdgeId + 1);
-
-				ClipVertex StartVertex = vertexPos[StartVertexId];
-				ClipVertex EndVertex = vertexPos[EndVertexId];
-
-				bool StartBehindPlane = behindPlane[StartVertexId];
-				bool EndBehindPlane = behindPlane[EndVertexId];
-
-				if (!StartBehindPlane)
-				{
-					output->vertices[3 * CurrTriangleId + CurrVertexId++] = StartVertex;
-				}
-
-				if (StartBehindPlane != EndBehindPlane)
-				{
-					output->vertices[3 * CurrTriangleId + CurrVertexId++] = calculateIntersection(StartVertex, EndVertex, clipAxis);
-				}
-			}
-		} break;
-		case 3:
-		{
-			// All vertices are behind the plane, do nothing
-		} break;
-		default:
-		{
-			AssertMsg("Invalid number of vertices behind the plane");
-		} break;
-		}
 	}
 }
 
@@ -486,25 +270,29 @@ void GlobalContext::RenderModel(const Model& model, const M4& modelTransform) co
 
 void GlobalContext::DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1, const V4& ModelVertex2, const V2f& ModelUv0, const V2f& ModelUv1, const V2f& ModelUv2, const Texture& Texture) const
 {
-	ClipResult Ping = {};
-	Ping.numberOfTriangles = 1;
-	Ping.vertices[0] = { ModelVertex0, ModelUv0 };
-	Ping.vertices[1] = { ModelVertex1, ModelUv1 };
-	Ping.vertices[2] = { ModelVertex2, ModelUv2 };
+	ClipResult ping, pong;
 
-	ClipResult Pong = {};
+	ClipVertex v0 = { ModelVertex0, ModelUv0 };
+	ClipVertex v1 = { ModelVertex1, ModelUv1 };
+	ClipVertex v2 = { ModelVertex2, ModelUv2 };
 
-	ClipPolygonToAxis(&Ping, &Pong, ClipAxis::Left);
-	ClipPolygonToAxis(&Pong, &Ping, ClipAxis::Right);
-	ClipPolygonToAxis(&Ping, &Pong, ClipAxis::Top);
-	ClipPolygonToAxis(&Pong, &Ping, ClipAxis::Bottom);
-	ClipPolygonToAxis(&Ping, &Pong, ClipAxis::Near);
-	ClipPolygonToAxis(&Pong, &Ping, ClipAxis::Far);
-	ClipPolygonToAxis(&Ping, &Pong, ClipAxis::W);
+	ping.AddTriangle(v0, v1, v2);
 
-	for (u32 TriangleId = 0; TriangleId < Pong.numberOfTriangles; ++TriangleId)
+	ping.ClipToAxis(ClipAxis::Left, pong);
+	pong.ClipToAxis(ClipAxis::Right, ping);
+	ping.ClipToAxis(ClipAxis::Top, pong);
+	pong.ClipToAxis(ClipAxis::Bottom, ping);
+	ping.ClipToAxis(ClipAxis::Near, pong);
+	pong.ClipToAxis(ClipAxis::Far, ping);
+	ping.ClipToAxis(ClipAxis::W, pong);
+
+	for (u32 i = 0; i < pong.GetTriangleCount(); ++i)
 	{
-		DrawTriangle(Pong.vertices[3 * TriangleId + 0], Pong.vertices[3 * TriangleId + 1], Pong.vertices[3 * TriangleId + 2], Texture);
+		DrawTriangle(
+			pong.GetVertex(i * 3 + 0),
+			pong.GetVertex(i * 3 + 1),
+			pong.GetVertex(i * 3 + 2),
+			Texture);
 	}
 }
 

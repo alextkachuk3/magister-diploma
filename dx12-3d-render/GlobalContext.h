@@ -17,21 +17,9 @@
 #include "Model.h"
 #include "SamplerType.h"
 #include "ClipAxis.h"
-
-constexpr f32 W_CLIPPING_PLANE = 0.0001f;
-constexpr u32 CLIP_MAX_VERTICES = 384;
-
-struct ClipVertex
-{
-	V4 position;
-	V2f uv;
-};
-
-struct ClipResult
-{
-	u32 numberOfTriangles;
-	ClipVertex vertices[CLIP_MAX_VERTICES];
-};
+#include "Constants.h"
+#include "ClipResult.h"
+#include "ClipVertex.h"
 
 class GlobalContext
 {
