@@ -24,7 +24,7 @@
     <ProjectGuid>{8babee6a-eda0-4e6b-a075-1b96e72ac7ad}</ProjectGuid>
     <RootNamespace>dx123drender</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>cpu-3d-render</ProjectName>
+    <ProjectName>3d-render</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -56,9 +56,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="Shared">
-    <Import Project="..\shared\shared.vcxitems" Label="Shared" />
-  </ImportGroup>
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -107,7 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\Shared\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)cpu;$(ProjectDir)shared;$(ProjectDir)shared\math;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -123,7 +121,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\Shared\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)cpu;$(ProjectDir)shared;$(ProjectDir)shared\math;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,17 +132,46 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ClipAxis.h" />
-    <ClInclude Include="ClipResult.h" />
-    <ClInclude Include="ClipVertex.h" />
+    <ClInclude Include="cpu\ClipAxis.h" />
+    <ClInclude Include="cpu\ClipResult.h" />
+    <ClInclude Include="cpu\ClipVertex.h" />
+    <ClInclude Include="cpu\CpuGlobalContext.h" />
     <ClInclude Include="SamplerType.h" />
     <ClInclude Include="GlobalContext.h" />
+    <ClInclude Include="shared\Camera.h" />
+    <ClInclude Include="shared\Colors.h" />
+    <ClInclude Include="shared\Constants.h" />
+    <ClInclude Include="shared\FrameTimeLogger.h" />
+    <ClInclude Include="shared\GlobalContext.h" />
+    <ClInclude Include="shared\math\M4.h" />
+    <ClInclude Include="shared\math\V2.h" />
+    <ClInclude Include="shared\math\V3.h" />
+    <ClInclude Include="shared\math\V4.h" />
+    <ClInclude Include="shared\Model.h" />
+    <ClInclude Include="shared\ModelLoader.h" />
+    <ClInclude Include="shared\SamplerType.h" />
+    <ClInclude Include="shared\SceneModel.h" />
+    <ClInclude Include="shared\Texture.h" />
+    <ClInclude Include="shared\Typedefs.h" />
+    <ClInclude Include="shared\Utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ClipResult.cpp" />
-    <ClCompile Include="ClipVertex.cpp" />
-    <ClCompile Include="GlobalContext.cpp" />
+    <ClCompile Include="cpu\ClipResult.cpp" />
+    <ClCompile Include="cpu\ClipVertex.cpp" />
+    <ClCompile Include="cpu\CpuGlobalContext.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="shared\Camera.cpp" />
+    <ClCompile Include="shared\FrameTimeLogger.cpp" />
+    <ClCompile Include="shared\GlobalContext.cpp" />
+    <ClCompile Include="shared\math\M4.cpp" />
+    <ClCompile Include="shared\math\V2.cpp" />
+    <ClCompile Include="shared\math\V3.cpp" />
+    <ClCompile Include="shared\math\V4.cpp" />
+    <ClCompile Include="shared\Model.cpp" />
+    <ClCompile Include="shared\ModelLoader.cpp" />
+    <ClCompile Include="shared\SceneModel.cpp" />
+    <ClCompile Include="shared\Texture.cpp" />
+    <ClCompile Include="shared\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\duck\Duck.gltf" />

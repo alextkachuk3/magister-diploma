@@ -21,6 +21,33 @@
     <Filter Include="Resourse Files\Assets\Sponza">
       <UniqueIdentifier>{31e2ac43-1cd0-4732-9ff1-54f0a243cc4f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CPU">
+      <UniqueIdentifier>{66da4c14-3eb0-4c10-a213-0de70721c37e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CPU\Header Files">
+      <UniqueIdentifier>{41bc58b5-2615-402e-8c32-1b834faaefb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CPU\Source Files">
+      <UniqueIdentifier>{e93d6661-8743-4178-b4ac-e73a95ef6e79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared">
+      <UniqueIdentifier>{77c8f0e7-0774-487a-8c0e-4350674d4421}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared\Math">
+      <UniqueIdentifier>{fdb98784-7947-4eb1-9138-9da5bd65a9a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared\Math\Source Files">
+      <UniqueIdentifier>{ec4ef360-45b1-49ea-8241-71590ab8ce30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared\Math\Header Files">
+      <UniqueIdentifier>{677c27db-b89d-4913-9f80-14f77f2ae23e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared\Header Files">
+      <UniqueIdentifier>{541b9dbd-72b2-4480-8d80-660ff416b7cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared\Source Files">
+      <UniqueIdentifier>{1b035fd5-4e0d-4be1-af60-368837807479}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlobalContext.h">
@@ -29,28 +56,115 @@
     <ClInclude Include="SamplerType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClipAxis.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="cpu\ClipAxis.h">
+      <Filter>CPU\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClipVertex.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="cpu\ClipResult.h">
+      <Filter>CPU\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClipResult.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="cpu\ClipVertex.h">
+      <Filter>CPU\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\CpuGlobalContext.h">
+      <Filter>CPU\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\M4.h">
+      <Filter>Shared\Math\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\V2.h">
+      <Filter>Shared\Math\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\V3.h">
+      <Filter>Shared\Math\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\V4.h">
+      <Filter>Shared\Math\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\Camera.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\Colors.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\Constants.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\FrameTimeLogger.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\GlobalContext.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\Model.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\ModelLoader.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\SamplerType.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\SceneModel.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\Texture.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\Typedefs.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\Utils.h">
+      <Filter>Shared\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GlobalContext.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="cpu\ClipResult.cpp">
+      <Filter>CPU\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ClipVertex.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="cpu\ClipVertex.cpp">
+      <Filter>CPU\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ClipResult.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="cpu\CpuGlobalContext.cpp">
+      <Filter>CPU\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\M4.cpp">
+      <Filter>Shared\Math\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\V2.cpp">
+      <Filter>Shared\Math\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\V3.cpp">
+      <Filter>Shared\Math\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\V4.cpp">
+      <Filter>Shared\Math\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\Camera.cpp">
+      <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\FrameTimeLogger.cpp">
+      <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\GlobalContext.cpp">
+      <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\Model.cpp">
+      <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\ModelLoader.cpp">
+      <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\SceneModel.cpp">
+      <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\Texture.cpp">
+      <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\Utils.cpp">
+      <Filter>Shared\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

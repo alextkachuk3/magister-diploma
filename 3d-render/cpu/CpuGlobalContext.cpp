@@ -1,86 +1,14 @@
-#include "GlobalContext.h"
+#include "CpuGlobalContext.h"
 
-static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
+CpuGlobalContext::CpuGlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height) : GlobalContext(hInstance, windowTitle, width, height)
 {
-	switch (message)
-	{
-	case WM_DESTROY:
-	case WM_CLOSE:
-		GlobalContext::Stop();
-		return 0;
-	case WM_SIZE:
-	{
-		u32 newWidth = LOWORD(lParam);
-		u32 newHeight = HIWORD(lParam);
-		GlobalContext::Resize(newWidth, newHeight);
-		return 0;
-	}
-	default:
-		return DefWindowProcA(windowHandle, message, wParam, lParam);
-	}
-}
-
-GlobalContext* GlobalContext::activeInstance(nullptr);
-
-GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height)
-{
-	SetActiveInstance(this);
-	WNDCLASSA windowClass = {};
-	windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-	windowClass.lpfnWndProc = Win32WindowCallBack;
-	windowClass.hInstance = hInstance;
-	windowClass.lpszClassName = windowTitle;
 	samplerType = SamplerType::BilinearFiltration;
 	borderColor = Utils::u32ColorToV3Rgb(Colors::Green);
-
-	if (!RegisterClassA(&windowClass)) AssertMsg("Failed to register class!");
-
-	windowHandle = CreateWindowExA(
-		0,
-		windowClass.lpszClassName,
-		windowTitle,
-		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		width,
-		height,
-		nullptr,
-		nullptr,
-		hInstance,
-		nullptr);
-
-	if (!windowHandle) AssertMsg("Failed to create window");
-
-	deviceContext = GetDC(windowHandle);
-
-	RECT clientRect;
-	Assert(GetClientRect(windowHandle, &clientRect));
-	frameBufferWidth = clientRect.right - clientRect.left;
-	frameBufferHeight = clientRect.bottom - clientRect.top;
-	frameBufferWidthF32 = static_cast<f32>(frameBufferWidth);
-	frameBufferHeightF32 = static_cast<f32>(frameBufferHeight);
-	aspectRatio = f32(frameBufferWidth) / f32(frameBufferHeight);
-
 	frameBufferPixels = std::make_unique<u32[]>(frameBufferWidth * frameBufferHeight);
 	zBuffer = std::make_unique<f32[]>(frameBufferWidth * frameBufferHeight);
 }
 
-GlobalContext::~GlobalContext()
-{
-	ReleaseResources();
-}
-
-void GlobalContext::SetActiveInstance(GlobalContext* instance)
-{
-	activeInstance = instance;
-}
-
-GlobalContext* GlobalContext::GetActiveInstance()
-{
-	return activeInstance;
-}
-
-void GlobalContext::Run()
+void CpuGlobalContext::Run()
 {
 	isRunning = true;
 
@@ -130,20 +58,7 @@ void GlobalContext::Run()
 	}
 }
 
-void GlobalContext::Stop()
-{
-	if (activeInstance)
-	{
-		activeInstance->StopInternal();
-	}
-}
-
-void GlobalContext::StopInternal()
-{
-	isRunning = false;
-}
-
-void GlobalContext::ReleaseResources()
+void CpuGlobalContext::ReleaseResources()
 {
 	if (deviceContext && windowHandle)
 		ReleaseDC(windowHandle, deviceContext);
@@ -152,7 +67,7 @@ void GlobalContext::ReleaseResources()
 	zBuffer.reset();
 }
 
-void GlobalContext::ProcessSystemMessages()
+void CpuGlobalContext::ProcessSystemMessages()
 {
 	MSG message;
 	while (PeekMessageW(&message, windowHandle, 0, 0, PM_REMOVE))
@@ -219,7 +134,7 @@ void GlobalContext::ProcessSystemMessages()
 	}
 }
 
-void GlobalContext::RenderFrame() const
+void CpuGlobalContext::RenderFrame() const
 {
 	BITMAPINFO bitmapInfo = {};
 	bitmapInfo.bmiHeader.biSize = sizeof(tagBITMAPINFOHEADER);
@@ -231,10 +146,14 @@ void GlobalContext::RenderFrame() const
 
 	Assert(StretchDIBits(
 		deviceContext,
-		0, 0,
-		frameBufferWidth, frameBufferHeight,
-		0, 0,
-		frameBufferWidth, frameBufferHeight,
+		0, 
+		0,
+		frameBufferWidth, 
+		frameBufferHeight,
+		0, 
+		0,
+		frameBufferWidth,
+		frameBufferHeight,
 		frameBufferPixels.get(),
 		&bitmapInfo,
 		DIB_RGB_COLORS,
@@ -242,12 +161,7 @@ void GlobalContext::RenderFrame() const
 	));
 }
 
-V2f GlobalContext::NdcToBufferCoordinates(V2f NdcPoint) const
-{
-	return V2f(frameBufferWidthF32, frameBufferHeightF32) * 0.5f * (NdcPoint + V2f(1.0f, 1.0f));
-}
-
-void GlobalContext::RenderModel(const Model& model, const M4& modelTransform) const
+void CpuGlobalContext::RenderModel(const Model& model, const M4& modelTransform) const
 {
 	V4* TransformedVertices = new V4[model.vertices.size()];
 	for (u32 VertexId = 0; VertexId < model.vertices.size(); ++VertexId)
@@ -269,9 +183,10 @@ void GlobalContext::RenderModel(const Model& model, const M4& modelTransform) co
 	delete[] TransformedVertices;
 }
 
-void GlobalContext::DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1, const V4& ModelVertex2, const V2f& ModelUv0, const V2f& ModelUv1, const V2f& ModelUv2, const Texture& Texture) const
+void CpuGlobalContext::DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1, const V4& ModelVertex2, const V2f& ModelUv0, const V2f& ModelUv1, const V2f& ModelUv2, const Texture& Texture) const
 {
-	ClipResult ping, pong;
+	ClipResult ping;
+	ClipResult pong;
 
 	ClipVertex v0 = { ModelVertex0, ModelUv0 };
 	ClipVertex v1 = { ModelVertex1, ModelUv1 };
@@ -297,7 +212,7 @@ void GlobalContext::DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1,
 	}
 }
 
-void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& vertex1, const ClipVertex& vertex2, const Texture& texture) const
+void CpuGlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& vertex1, const ClipVertex& vertex2, const Texture& texture) const
 {
 	ClipVertex v0 = vertex0;
 	ClipVertex v1 = vertex1;
@@ -315,10 +230,10 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 	V2f pointB = NdcToBufferCoordinates(v1.position.xy);
 	V2f pointC = NdcToBufferCoordinates(v2.position.xy);
 
-	i32 minX = std::max(0, (i32)floorf(std::min({ pointA.x, pointB.x, pointC.x })));
-	i32 maxX = std::min((i32)frameBufferWidth - 1, (i32)ceilf(std::max({ pointA.x, pointB.x, pointC.x })));
-	i32 minY = std::max(0, (i32)floorf(std::min({ pointA.y, pointB.y, pointC.y })));
-	i32 maxY = std::min((i32)frameBufferHeight - 1, (i32)ceilf(std::max({ pointA.y, pointB.y, pointC.y })));
+	i32 minX = std::max(0, static_cast<i32>(floorf(std::min({ pointA.x, pointB.x, pointC.x }))));
+	i32 maxX = std::min(static_cast<i32>(frameBufferWidth - 1), static_cast<i32>(ceilf(std::max({ pointA.x, pointB.x, pointC.x }))));
+	i32 minY = std::max(0, static_cast<i32>(floorf(std::min({ pointA.y, pointB.y, pointC.y }))));
+	i32 maxY = std::min(static_cast<i32>(frameBufferHeight - 1), static_cast<i32>(ceilf(std::max({ pointA.y, pointB.y, pointC.y }))));
 
 	V2f edges[] =
 	{
@@ -395,11 +310,11 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 					{
 					case SamplerType::NearestTexel:
 					{
-						i32 texelX = (i32)floorf(uv.x * texture.getWidth());
-						i32 texelY = (i32)floorf(uv.y * texture.getHeight());
+						i32 texelX = static_cast<i32>(floorf(uv.x * texture.getWidth()));
+						i32 texelY = static_cast<i32>(floorf(uv.y * texture.getHeight()));
 
-						if (texelX >= 0 && texelX < (i32)texture.getWidth() &&
-							texelY >= 0 && texelY < (i32)texture.getHeight())
+						if (texelX >= 0 && texelX < static_cast<i32>(texture.getWidth()) &&
+							texelY >= 0 && texelY < static_cast<i32>(texture.getHeight()))
 						{
 							texelColor = texture[texelY * texture.getWidth() + texelX];
 						}
@@ -415,11 +330,12 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 
 						const int pointsCount = 4;
 
-						V2i texelPos[pointsCount] = {
-							V2i((i32)floorf(texelV2.x), (i32)floorf(texelV2.y)),
-							V2i((i32)floorf(texelV2.x) + 1, (i32)floorf(texelV2.y)),
-							V2i((i32)floorf(texelV2.x), (i32)floorf(texelV2.y) + 1),
-							V2i((i32)floorf(texelV2.x) + 1, (i32)floorf(texelV2.y) + 1),
+						V2i texelPos[pointsCount] = 
+						{
+							V2i(static_cast<i32>(floorf(texelV2.x)), static_cast<i32>(floorf(texelV2.y))),
+							V2i(static_cast<i32>(floorf(texelV2.x)) + 1, static_cast<i32>(floorf(texelV2.y))),
+							V2i(static_cast<i32>(floorf(texelV2.x)), static_cast<i32>(floorf(texelV2.y)) + 1),
+							V2i(static_cast<i32>(floorf(texelV2.x)) + 1, static_cast<i32>(floorf(texelV2.y)) + 1),
 						};
 
 						V3 texelColors[pointsCount] = {};
@@ -462,7 +378,7 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 	}
 }
 
-void GlobalContext::ClearBuffers()
+void CpuGlobalContext::ClearBuffers()
 {
 	for (u32 y = 0; y < frameBufferHeight; y++)
 	{
@@ -475,65 +391,9 @@ void GlobalContext::ClearBuffers()
 	}
 }
 
-void GlobalContext::Resize(u32 newWidth, u32 newHeight)
+void CpuGlobalContext::ResizeInternal(const u32 newWidth, const u32 newHeight)
 {
-	if (activeInstance)
-	{
-		activeInstance->ResizeInternal(newWidth, newHeight);
-	}
-}
-
-void GlobalContext::ResizeInternal(const u32 newWidth, const u32 newHeight)
-{
-	if (newWidth == 0 || newHeight == 0)
-		return;
-
-	frameBufferWidth = newWidth;
-	frameBufferHeight = newHeight;
-	frameBufferWidthF32 = static_cast<f32>(newWidth);
-	frameBufferHeightF32 = static_cast<f32>(newHeight);
-	aspectRatio = frameBufferWidthF32 / frameBufferHeightF32;
-
+	GlobalContext::ResizeInternal(newWidth, newHeight);
 	frameBufferPixels = std::make_unique<u32[]>(newWidth * newHeight);
 	zBuffer = std::make_unique<f32[]>(newWidth * newHeight);
-}
-
-HWND GlobalContext::GetWindowHandle() const
-{
-	return windowHandle;
-}
-
-void GlobalContext::SetWindowHandle(HWND handle)
-{
-	windowHandle = handle;
-}
-
-HDC GlobalContext::GetDeviceContext() const
-{
-	return deviceContext;
-}
-
-void GlobalContext::SetDeviceContext(HDC context)
-{
-	deviceContext = context;
-}
-
-u32 GlobalContext::GetFrameBufferWidth() const
-{
-	return frameBufferWidth;
-}
-
-void GlobalContext::SetFrameBufferWidth(u32 width)
-{
-	frameBufferWidth = width;
-}
-
-u32 GlobalContext::GetFrameBufferHeight() const
-{
-	return frameBufferHeight;
-}
-
-void GlobalContext::SetFrameBufferHeight(u32 height)
-{
-	frameBufferHeight = height;
 }
