@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35931.197 d17.13
+VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dx12-3d-render", "dx12-3d-render\dx12-3d-render.vcxproj", "{8BABEE6A-EDA0-4E6B-A075-1B96E72AC7AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shared", "shared\shared.vcxitems", "{933E25B9-80A6-45CB-93D3-5E9B804A07D5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dx12-3d-render", "dx12-3d-render\dx12-3d-render.vcxproj", "{CC513554-182B-4807-83E6-8FDB024B27FC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cpu-3d-render", "cpu-3d-render\cpu-3d-render.vcxproj", "{8BABEE6A-EDA0-4E6B-A075-1B96E72AC7AD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +17,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CC513554-182B-4807-83E6-8FDB024B27FC}.Debug|x64.ActiveCfg = Debug|x64
+		{CC513554-182B-4807-83E6-8FDB024B27FC}.Debug|x64.Build.0 = Debug|x64
+		{CC513554-182B-4807-83E6-8FDB024B27FC}.Debug|x86.ActiveCfg = Debug|Win32
+		{CC513554-182B-4807-83E6-8FDB024B27FC}.Debug|x86.Build.0 = Debug|Win32
+		{CC513554-182B-4807-83E6-8FDB024B27FC}.Release|x64.ActiveCfg = Release|x64
+		{CC513554-182B-4807-83E6-8FDB024B27FC}.Release|x64.Build.0 = Release|x64
+		{CC513554-182B-4807-83E6-8FDB024B27FC}.Release|x86.ActiveCfg = Release|Win32
+		{CC513554-182B-4807-83E6-8FDB024B27FC}.Release|x86.Build.0 = Release|Win32
 		{8BABEE6A-EDA0-4E6B-A075-1B96E72AC7AD}.Debug|x64.ActiveCfg = Debug|x64
 		{8BABEE6A-EDA0-4E6B-A075-1B96E72AC7AD}.Debug|x64.Build.0 = Debug|x64
 		{8BABEE6A-EDA0-4E6B-A075-1B96E72AC7AD}.Debug|x86.ActiveCfg = Debug|Win32
@@ -27,5 +39,10 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {940EB713-793B-42CF-912C-109BCB116F19}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		shared\shared.vcxitems*{8babee6a-eda0-4e6b-a075-1b96e72ac7ad}*SharedItemsImports = 4
+		shared\shared.vcxitems*{933e25b9-80a6-45cb-93d3-5e9b804a07d5}*SharedItemsImports = 9
+		shared\shared.vcxitems*{cc513554-182b-4807-83e6-8fdb024b27fc}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

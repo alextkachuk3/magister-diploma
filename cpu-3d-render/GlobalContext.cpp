@@ -356,9 +356,9 @@ void GlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex& ve
 
 	f32 edgesRowY[] =
 	{
-		V2f::CrossProduct(V2f(minX, minY) - pointA, edges[0]),
-		V2f::CrossProduct(V2f(minX, minY) - pointB, edges[1]),
-		V2f::CrossProduct(V2f(minX, minY) - pointC, edges[2])
+		V2f::CrossProduct(V2f(static_cast<f32>(minX), static_cast<f32>(minY)) - pointA, edges[0]),
+		V2f::CrossProduct(V2f(static_cast<f32>(minX), static_cast<f32>(minY)) - pointB, edges[1]),
+		V2f::CrossProduct(V2f(static_cast<f32>(minX), static_cast<f32>(minY)) - pointC, edges[2])
 	};
 
 	for (i32 y = minY; y <= maxY; ++y)
