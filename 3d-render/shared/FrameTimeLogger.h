@@ -4,13 +4,14 @@
 #include <filesystem>
 #include <format>
 #include <string>
+#include <iostream>
 
 class FrameTimeLogger
 {
 private:
 	std::ofstream logFile;
 
-	std::string GenerateUniqueFileName();
+	std::string GenerateUniqueFileName() const;
 
 public:
 	FrameTimeLogger();

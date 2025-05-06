@@ -18,3 +18,11 @@ V3 Utils::Lerp(const V3& A, const V3& B, f32 t)
 {
 	return (1.0f - t) * A + t * B;
 }
+
+void ThrowIfFailed(HRESULT result)
+{
+	if (result != S_OK)
+	{
+		throw std::runtime_error("HRESULT failed");
+	}
+}

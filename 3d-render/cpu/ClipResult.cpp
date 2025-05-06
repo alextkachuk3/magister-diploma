@@ -1,6 +1,4 @@
 #include "ClipResult.h"
-#include "Utils.h"
-#include "Constants.h"
 
 void ClipResult::Clear()
 {

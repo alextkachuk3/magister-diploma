@@ -1,5 +1,4 @@
 #include "ClipVertex.h"
-#include "Constants.h"
 
 bool ClipVertex::IsBehindPlane(ClipAxis axis) const
 {

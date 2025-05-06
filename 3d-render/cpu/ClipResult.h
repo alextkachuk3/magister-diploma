@@ -1,6 +1,9 @@
 #pragma once
-#include "ClipVertex.h"
+
 #include <vector>
+#include "ClipVertex.h"
+#include "Utils.h"
+#include "Constants.h"
 
 class ClipResult
 {

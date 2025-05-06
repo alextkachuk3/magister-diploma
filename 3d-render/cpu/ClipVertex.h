@@ -3,6 +3,7 @@
 #include "V4.h"
 #include "V2.h"
 #include "ClipAxis.h"
+#include "Constants.h"
 
 class ClipVertex
 {

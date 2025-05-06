@@ -1,11 +1,14 @@
 #pragma once
 
 #include <Windows.h>
+#include <stdexcept>
 #include <algorithm>
 #include "V3.h"
 
 #define Assert(Expression) if (!(Expression)) {__debugbreak();}
 #define AssertMsg(Msg) { OutputDebugStringA(Msg); Assert(false);}
+
+void ThrowIfFailed(HRESULT result);
 
 namespace Utils
 {

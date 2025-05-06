@@ -1,6 +1,7 @@
 #include "FrameTimeLogger.h"
 
-std::string FrameTimeLogger::GenerateUniqueFileName()
+
+std::string FrameTimeLogger::GenerateUniqueFileName() const
 {
 	const std::filesystem::path folder = "log";
 
@@ -30,7 +31,14 @@ FrameTimeLogger::~FrameTimeLogger()
 {
 	if (logFile.is_open())
 	{
-		logFile.close();
+		try
+		{
+			logFile.close();
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << "Error closing log file: " << e.what() << std::endl;
+		}
 	}
 }
 
