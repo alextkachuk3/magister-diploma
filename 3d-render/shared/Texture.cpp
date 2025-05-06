@@ -15,9 +15,9 @@ u32 Texture::getWidth() const
 	return width;
 }
 
-u32 Texture::getHeight() const  
-{  
-   return height;  
+u32 Texture::getHeight() const
+{
+	return height;
 }
 
 u32 Texture::operator[](const u32 index) const
@@ -95,4 +95,3 @@ Texture Texture::LoadFromFile(const std::string& path)
 	stbi_image_free(data);
 	return result;
 }
-

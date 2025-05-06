@@ -5,10 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resourse Files">
       <UniqueIdentifier>{4b9ac504-37b6-49dd-8462-8a3127a6a6ee}</UniqueIdentifier>
     </Filter>
@@ -48,14 +44,17 @@
     <Filter Include="Shared\Source Files">
       <UniqueIdentifier>{1b035fd5-4e0d-4be1-af60-368837807479}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Dx12">
+      <UniqueIdentifier>{7016c684-f4ca-4df6-8d20-ca760627369e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dx12\Source Files">
+      <UniqueIdentifier>{989e98f1-dbff-47e5-bee8-e92a368e03a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dx12\Header Files">
+      <UniqueIdentifier>{50a3e010-5107-479f-97fb-7a2886733fbd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GlobalContext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SamplerType.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cpu\ClipAxis.h">
       <Filter>CPU\Header Files</Filter>
     </ClInclude>
@@ -116,6 +115,9 @@
     <ClInclude Include="shared\Utils.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dx12\Dx12GlobalContext.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -165,6 +167,9 @@
     </ClCompile>
     <ClCompile Include="shared\Utils.cpp">
       <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Dx12GlobalContext.cpp">
+      <Filter>Dx12\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

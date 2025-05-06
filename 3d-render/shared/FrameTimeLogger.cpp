@@ -1,6 +1,4 @@
 #include "FrameTimeLogger.h"
-#include <filesystem>
-#include <format>
 
 std::string FrameTimeLogger::GenerateUniqueFileName()
 {

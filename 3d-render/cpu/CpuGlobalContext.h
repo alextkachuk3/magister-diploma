@@ -17,10 +17,7 @@ private:
 public:
 	CpuGlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height);
 
-	void Run();
-
-	void ReleaseResources();
-	void ProcessSystemMessages();
+	void Run() override;
 
 	void RenderFrame() const;
 	void RenderModel(const Model& model, const M4& modelTransform) const;
@@ -30,5 +27,6 @@ public:
 
 	void ClearBuffers();
 
+	void ReleaseResources() override;
 	void ResizeInternal(const u32 newWidth, const u32 newHeight) override;
 };

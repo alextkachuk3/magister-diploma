@@ -1,6 +1,8 @@
 #pragma once
 
 #include <fstream>
+#include <filesystem>
+#include <format>
 #include <string>
 
 class FrameTimeLogger

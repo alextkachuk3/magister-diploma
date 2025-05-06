@@ -60,78 +60,10 @@ void CpuGlobalContext::Run()
 
 void CpuGlobalContext::ReleaseResources()
 {
-	if (deviceContext && windowHandle)
-		ReleaseDC(windowHandle, deviceContext);
+	GlobalContext::ReleaseResources();
 
 	frameBufferPixels.reset();
 	zBuffer.reset();
-}
-
-void CpuGlobalContext::ProcessSystemMessages()
-{
-	MSG message;
-	while (PeekMessageW(&message, windowHandle, 0, 0, PM_REMOVE))
-	{
-		switch (message.message)
-		{
-		case WM_QUIT:
-		{
-			isRunning = false;
-			break;
-		}
-		case WM_KEYDOWN:
-		{
-			switch (message.wParam)
-			{
-			case 'W':
-				wButtonPressed = true;
-				break;
-			case 'A':
-				aButtonPressed = true;
-				break;
-			case 'S':
-				sButtonPressed = true;
-				break;
-			case 'D':
-				dButtonPressed = true;
-				break;
-			case VK_ESCAPE:
-				isRunning = false;
-				break;
-			default:
-				break;
-			}
-			break;
-		}
-		case WM_KEYUP:
-		{
-			switch (message.wParam)
-			{
-			case 'W':
-				wButtonPressed = false;
-				break;
-			case 'A':
-				aButtonPressed = false;
-				break;
-			case 'S':
-				sButtonPressed = false;
-				break;
-			case 'D':
-				dButtonPressed = false;
-				break;
-			default:
-				break;
-			}
-			break;
-		}
-		default:
-		{
-			TranslateMessage(&message);
-			DispatchMessageW(&message);
-			break;
-		}
-		}
-	}
 }
 
 void CpuGlobalContext::RenderFrame() const

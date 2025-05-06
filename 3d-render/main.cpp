@@ -1,13 +1,26 @@
 ﻿#include <Windows.h>
-#include "cpu/CpuGlobalContext.h"
+#include <algorithm>
+#include "CpuGlobalContext.h"
+#include "Dx12GlobalContext.h"
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
-    CpuGlobalContext globalContext(hInstance, "Render", 1280, 720);
+	std::string commandLine(lpCmdLine);
+	std::transform(commandLine.begin(), commandLine.end(), commandLine.begin(), ::tolower);
 
-	globalContext.Run();
+	std::unique_ptr<GlobalContext> globalContext;
 
-	globalContext.ReleaseResources();
+	if (commandLine.find("--cpu") != std::string::npos)
+	{
+		globalContext = std::make_unique<CpuGlobalContext>(hInstance, "Render CPU", 1280, 720);
+	}
+	else
+	{
+		globalContext = std::make_unique<Dx12GlobalContext>(hInstance, "Render DX12", 1920, 1080);
+	}
+
+	globalContext->Run();
+
 
 	return 0;
 }

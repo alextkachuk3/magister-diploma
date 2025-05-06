@@ -1,3 +1,5 @@
+#pragma once
+
 #define NOMINMAX
 #include <Windows.h>
 #include <memory>
@@ -28,14 +30,17 @@ public:
 	static void SetActiveInstance(GlobalContext* instance);
 	static GlobalContext* GetActiveInstance();
 
+	virtual void Run() = 0;
 	static void Stop();
 	static void Resize(const u32 newWidth, const u32 newHeight);
 
 protected:
 	V2f NdcToBufferCoordinates(const V2f NdcPoint) const;
 
+	void ProcessSystemMessages();
 	void StopInternal();
 	virtual void ResizeInternal(const u32 newWidth, const u32 newHeight);
+	virtual void ReleaseResources();
 
 	HWND windowHandle;
 	HDC deviceContext;

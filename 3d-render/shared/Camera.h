@@ -22,7 +22,7 @@ public:
 
 	void move(const V3& direction);
 	void moveReverse(const V3& direction);
-	
+
 private:
 	f32 yaw = 0.0f;
 	f32 pitch = 0.0f;

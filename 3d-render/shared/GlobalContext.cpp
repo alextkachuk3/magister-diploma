@@ -105,7 +105,7 @@ void GlobalContext::Resize(const u32 newWidth, const u32 newHeight)
 	}
 }
 
-inline void GlobalContext::ResizeInternal(const u32 newWidth, const u32 newHeight)
+void GlobalContext::ResizeInternal(const u32 newWidth, const u32 newHeight)
 {
 	if (newWidth == 0 || newHeight == 0)
 		return;
@@ -117,7 +117,88 @@ inline void GlobalContext::ResizeInternal(const u32 newWidth, const u32 newHeigh
 	aspectRatio = frameBufferWidthF32 / frameBufferHeightF32;
 }
 
+void GlobalContext::ReleaseResources()
+{
+	if (deviceContext && windowHandle)
+	{
+		ReleaseDC(windowHandle, deviceContext);
+		deviceContext = nullptr;
+	}
+	if (windowHandle)
+	{
+		DestroyWindow(windowHandle);
+		windowHandle = nullptr;
+	}
+}
+
 V2f GlobalContext::NdcToBufferCoordinates(const V2f NdcPoint) const
 {
 	return V2f(frameBufferWidthF32, frameBufferHeightF32) * 0.5f * (NdcPoint + V2f(1.0f, 1.0f));
+}
+
+void GlobalContext::ProcessSystemMessages()
+{
+	MSG message;
+	while (PeekMessageW(&message, windowHandle, 0, 0, PM_REMOVE))
+	{
+		switch (message.message)
+		{
+		case WM_QUIT:
+		{
+			isRunning = false;
+			break;
+		}
+		case WM_KEYDOWN:
+		{
+			switch (message.wParam)
+			{
+			case 'W':
+				wButtonPressed = true;
+				break;
+			case 'A':
+				aButtonPressed = true;
+				break;
+			case 'S':
+				sButtonPressed = true;
+				break;
+			case 'D':
+				dButtonPressed = true;
+				break;
+			case VK_ESCAPE:
+				isRunning = false;
+				break;
+			default:
+				break;
+			}
+			break;
+		}
+		case WM_KEYUP:
+		{
+			switch (message.wParam)
+			{
+			case 'W':
+				wButtonPressed = false;
+				break;
+			case 'A':
+				aButtonPressed = false;
+				break;
+			case 'S':
+				sButtonPressed = false;
+				break;
+			case 'D':
+				dButtonPressed = false;
+				break;
+			default:
+				break;
+			}
+			break;
+		}
+		default:
+		{
+			TranslateMessage(&message);
+			DispatchMessageW(&message);
+			break;
+		}
+		}
+	}
 }
