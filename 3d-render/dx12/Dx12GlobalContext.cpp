@@ -2,7 +2,7 @@
 
 Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height) : GlobalContext(hInstance, windowTitle, width, height)
 {
-	IDXGIFactory2* Factory = 0;
+	IDXGIFactory2* Factory = nullptr;
 	ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&Factory)));
 
 	ID3D12Debug1* Debug;
@@ -73,5 +73,42 @@ void Dx12GlobalContext::Run()
 	while (isRunning)
 	{
 		ProcessSystemMessages();
+
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Transition.pResource = frameBuffers[currentFrameIndex];
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		commandList->ResourceBarrier(1, &barrier);
+
+		const f32 color[4] = { 1.0f, 0.0f, 0.5f, 1.0f };
+		commandList->ClearRenderTargetView(frameBufferDescriptors[currentFrameIndex], color, 0, nullptr);
+
+		barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Transition.pResource = frameBuffers[currentFrameIndex];
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		commandList->ResourceBarrier(1, &barrier);
+
+		ThrowIfFailed(commandList->Close());
+		commandQueue->ExecuteCommandLists(1, (ID3D12CommandList**)&commandList);
+		swapChain->Present(1, 0);
+
+		fenceValue += 1;
+		ThrowIfFailed(commandQueue->Signal(fence, fenceValue));
+		if (fence->GetCompletedValue() != fenceValue)
+		{
+			HANDLE fenceEvent = {};
+			ThrowIfFailed(fence->SetEventOnCompletion(fenceValue, fenceEvent));
+			WaitForSingleObject(fenceEvent, INFINITE);
+		}
+
+		ThrowIfFailed(commandAllocator->Reset());
+		ThrowIfFailed(commandList->Reset(commandAllocator, nullptr));
+
+		currentFrameIndex = (currentFrameIndex + 1) % 2;
 	}
 }
