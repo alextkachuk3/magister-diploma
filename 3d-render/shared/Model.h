@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 #include "V2.h"
 #include "V3.h"
 #include "Texture.h"
@@ -11,8 +12,7 @@ public:
 	std::vector<V3> vertices;
 	std::vector<V2f> uvs;
 	std::vector<u32> indices;
-	Texture texture;
+	std::shared_ptr<Texture> texture;
 
-	Model() = default;
-	void LoadCube();
+	static Model CreateCube();
 };

@@ -1,8 +1,10 @@
 #include "Model.h"
 
-void Model::LoadCube()
+Model Model::CreateCube()
 {
-	vertices = {
+	Model result;
+	result.vertices =
+	{
 		{-0.5f, -0.5f, -0.5f}, {-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, -0.5f}, { 0.5f, -0.5f, -0.5f}, // Front
 		{ 0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f,  0.5f}, {-0.5f,  0.5f,  0.5f}, {-0.5f, -0.5f,  0.5f}, // Back
 		{-0.5f, -0.5f,  0.5f}, {-0.5f,  0.5f,  0.5f}, {-0.5f,  0.5f, -0.5f}, {-0.5f, -0.5f, -0.5f}, // Left
@@ -11,7 +13,8 @@ void Model::LoadCube()
 		{-0.5f, -0.5f,  0.5f}, {-0.5f, -0.5f, -0.5f}, { 0.5f, -0.5f, -0.5f}, { 0.5f, -0.5f,  0.5f}  // Bottom
 	};
 
-	uvs = {
+	result.uvs = 
+	{
 		{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Front
 		{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Back
 		{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}, // Left
@@ -20,7 +23,8 @@ void Model::LoadCube()
 		{0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}  // Bottom
 	};
 
-	indices = {
+	result.indices =
+	{
 		 0,  1,  2,  2,  3,  0, // Front
 		 4,  5,  6,  6,  7,  4, // Back
 		 8,  9, 10, 10, 11,  8, // Left
@@ -29,6 +33,6 @@ void Model::LoadCube()
 		20, 21, 22, 22, 23, 20  // Bottom
 	};
 
-	texture = Texture::generateCheckerboardTexture(16, 16, 2);
+	result.texture = std::make_shared<Texture>(Texture::generateCheckerboardTexture(16, 16, 2, Colors::Black, Colors::Purple));
+	return result;
 }
-

@@ -49,7 +49,7 @@ Model ModelLoader::LoadModelFromFile(const std::string& modelPath, const std::st
 		}
 	}
 
-	model.texture = Texture::LoadFromFile(texturePath);
+	model.texture = std::make_shared<Texture>(Texture::LoadFromFile(texturePath));
 
 	return model;
 }
@@ -104,11 +104,11 @@ SceneModel ModelLoader::LoadSceneModelFromFile(const std::string& modelPath, con
 			if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
 			{
 				std::string fullTexPath = textureDir + "/" + std::string(texPath.C_Str());
-				model.texture = Texture::LoadFromFile(fullTexPath);
+				model.texture = std::make_shared<Texture>(Texture::LoadFromFile(fullTexPath));
 			}
 			else
 			{
-				model.texture = Texture::generateCheckerboardTexture(64, 64, 8);
+				model.texture = std::make_shared<Texture>(Texture::generateCheckerboardTexture(64, 64, 8, Colors::Purple, Colors::Black));
 			}
 		}
 

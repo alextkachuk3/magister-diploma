@@ -25,25 +25,25 @@ u32 Texture::operator[](const u32 index) const
 	return texels[index];
 }
 
-Texture Texture::generateCheckerboardTexture(u32 width, u32 height, u32 squareSize)
+Texture Texture::generateCheckerboardTexture(u32 width, u32 height, u32 squareSize, u32 color1, u32 color2)
 {
-	Texture result(width, height);
+    Texture result(width, height);
 
-	for (u32 y = 0; y < height; ++y)
-	{
-		for (u32 x = 0; x < width; ++x)
-		{
-			if ((x / squareSize) % 2 == (y / squareSize) % 2)
-			{
-				result.texels[y * width + x] = Colors::Black;
-			}
-			else
-			{
-				result.texels[y * width + x] = Colors::White;
-			}
-		}
-	}
-	return result;
+    for (u32 y = 0; y < height; ++y)
+    {
+        for (u32 x = 0; x < width; ++x)
+        {
+            if ((x / squareSize) % 2 == (y / squareSize) % 2)
+            {
+                result.texels[y * width + x] = color1;
+            }
+            else
+            {
+                result.texels[y * width + x] = color2;
+            }
+        }
+    }
+    return result;
 }
 
 Texture Texture::CreateSolidColor(u32 width, u32 height, u32 color)
@@ -73,7 +73,9 @@ Texture Texture::CreateBlueTexture(u32 width, u32 height)
 
 Texture Texture::LoadFromFile(const std::string& path)
 {
-	i32 x, y, channels;
+	i32 x;
+	i32 y;
+	i32 channels;
 	stbi_uc* data = stbi_load(path.c_str(), &x, &y, &channels, 4);
 
 	if (!data)
