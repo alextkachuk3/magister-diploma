@@ -1,6 +1,5 @@
 #include "FrameTimeLogger.h"
 
-
 std::string FrameTimeLogger::GenerateUniqueFileName() const
 {
 	const std::filesystem::path folder = "log";

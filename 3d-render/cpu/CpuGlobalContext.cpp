@@ -2,7 +2,7 @@
 
 CpuGlobalContext::CpuGlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height) : GlobalContext(hInstance, windowTitle, width, height)
 {
-	samplerType = SamplerType::NearestTexel;
+	samplerType = SamplerType::BilinearFiltration;
 	borderColor = Utils::u32ColorToV3Rgb(Colors::Green);
 	frameBufferPixels = std::make_unique<u32[]>(frameBufferWidth * frameBufferHeight);
 	zBuffer = std::make_unique<f32[]>(frameBufferWidth * frameBufferHeight);
@@ -21,17 +21,11 @@ void CpuGlobalContext::Run()
 	const f32 speed = 0.75f;
 	f32 currentTime = -2.0f * Constants::PI;
 
-	Model cube = Model::CreateCube();
-	Model duck = ModelLoader::LoadModelFromFile("./assets/duck/Duck.gltf", "./assets/duck/textures/DuckCM.png");
-	Model fox = ModelLoader::LoadModelFromFile("./assets/fox/Fox.gltf", "./assets/fox/Texture.png");
-	SceneModel scene = ModelLoader::LoadSceneModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
+	Model strawberry = ModelLoader::LoadModelFromFile("./assets/strawberry/Strawberry_gltf.gltf", "./assets/strawberry/Texture/Strawberry_basecolor.jpg");
 
 	std::vector<Model> models;	
 
-	for (const auto& mesh : scene.meshes)
-	{
-		models.push_back(mesh);
-	}
+	models.push_back(strawberry);
 
 	while (isRunning)
 	{
@@ -50,7 +44,7 @@ void CpuGlobalContext::Run()
 			currentTime -= 2.0f * Constants::PI;
 		}
 
-		M4 transform = M4::Perspective(aspectRatio, 1.57f, 0.01f, 4000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, -100, 2) * M4::Rotation(0, 0, 0) * M4::Scale(1.0f, 1.0f, 1.0f);
+		M4 transform = M4::Perspective(aspectRatio, 1.57f, 0.01f, 4000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 10) * M4::Rotation(0, 0, 0) * M4::Scale(1.0f, 1.0f, 1.0f);
 
 		for (const auto& model : models)
 		{

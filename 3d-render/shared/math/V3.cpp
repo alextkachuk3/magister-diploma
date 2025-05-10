@@ -14,7 +14,7 @@ V3 V3::operator+(const V3& other) const
 	return V3(x + other.x, y + other.y, z + other.z);
 }
 
-V3 V3::operator-(const V3& other) const
+inline V3 V3::operator-(const V3& other) const
 {
 	return V3(x - other.x, y - other.y, z - other.z);
 }

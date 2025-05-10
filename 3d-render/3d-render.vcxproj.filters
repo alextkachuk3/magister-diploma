@@ -53,6 +53,12 @@
     <Filter Include="Dx12\Header Files">
       <UniqueIdentifier>{50a3e010-5107-479f-97fb-7a2886733fbd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resourse Files\Assets\Fox">
+      <UniqueIdentifier>{698a13cc-6403-4632-b3b3-60a42611396c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resourse Files\Assets\Strawberry">
+      <UniqueIdentifier>{cd2ffe66-035c-4793-b8d7-c9efe95140d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu\ClipAxis.h">
@@ -184,6 +190,15 @@
     </None>
     <None Include="assets\sponza\Sponza.gltf">
       <Filter>Resourse Files\Assets\Sponza</Filter>
+    </None>
+    <None Include="assets\fox\Fox.bin">
+      <Filter>Resourse Files\Assets\Fox</Filter>
+    </None>
+    <None Include="assets\fox\Fox.gltf">
+      <Filter>Resourse Files\Assets\Fox</Filter>
+    </None>
+    <None Include="assets\strawberry\Strawberry_gltf.gltf">
+      <Filter>Resourse Files\Assets\Strawberry</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -396,6 +411,18 @@
     </Image>
     <Image Include="assets\sponza\textures\white.png">
       <Filter>Resourse Files\Assets\Sponza</Filter>
+    </Image>
+    <Image Include="assets\fox\Texture.png">
+      <Filter>Resourse Files\Assets\Fox</Filter>
+    </Image>
+    <Image Include="assets\strawberry\Texture\Strawberry_basecolor.jpg">
+      <Filter>Resourse Files\Assets\Strawberry</Filter>
+    </Image>
+    <Image Include="assets\strawberry\Texture\Strawberry_Normal.jpg">
+      <Filter>Resourse Files\Assets\Strawberry</Filter>
+    </Image>
+    <Image Include="assets\strawberry\Texture\Strawberry_Roughness.jpg">
+      <Filter>Resourse Files\Assets\Strawberry</Filter>
     </Image>
   </ItemGroup>
 </Project>

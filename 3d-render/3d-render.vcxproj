@@ -178,11 +178,15 @@
   <ItemGroup>
     <None Include="assets\duck\Duck.gltf" />
     <None Include="assets\duck\Duck0.bin" />
+    <None Include="assets\fox\Fox.bin" />
+    <None Include="assets\fox\Fox.gltf" />
     <None Include="assets\sponza\Sponza.bin" />
     <None Include="assets\sponza\Sponza.gltf" />
+    <None Include="assets\strawberry\Strawberry_gltf.gltf" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\duck\textures\DuckCM.png" />
+    <Image Include="assets\fox\Texture.png" />
     <Image Include="assets\sponza\textures\10381718147657362067.jpg" />
     <Image Include="assets\sponza\textures\10388182081421875623.jpg" />
     <Image Include="assets\sponza\textures\11474523244911310074.jpg" />
@@ -252,6 +256,9 @@
     <Image Include="assets\sponza\textures\9288698199695299068.jpg" />
     <Image Include="assets\sponza\textures\9916269861720640319.jpg" />
     <Image Include="assets\sponza\textures\white.png" />
+    <Image Include="assets\strawberry\Texture\Strawberry_basecolor.jpg" />
+    <Image Include="assets\strawberry\Texture\Strawberry_Normal.jpg" />
+    <Image Include="assets\strawberry\Texture\Strawberry_Roughness.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
