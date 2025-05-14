@@ -143,6 +143,7 @@
     <ClInclude Include="dx12\Dx12Model.h" />
     <ClInclude Include="dx12\Dx12PlacementHeap.h" />
     <ClInclude Include="dx12\Dx12SceneModel.h" />
+    <ClInclude Include="dx12\Dx12ShaderBytecode.h" />
     <ClInclude Include="dx12\Dx12UploadBuffer.h" />
     <ClInclude Include="shared\Camera.h" />
     <ClInclude Include="shared\Colors.h" />
@@ -170,6 +171,7 @@
     <ClCompile Include="dx12\Dx12Model.cpp" />
     <ClCompile Include="dx12\Dx12PlacementHeap.cpp" />
     <ClCompile Include="dx12\Dx12SceneModel.cpp" />
+    <ClCompile Include="dx12\Dx12ShaderBytecode.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shared\Camera.cpp" />
     <ClCompile Include="shared\FrameTimeLogger.cpp" />
@@ -192,6 +194,12 @@
     <None Include="assets\sponza\Sponza.bin" />
     <None Include="assets\sponza\Sponza.gltf" />
     <None Include="assets\strawberry\Strawberry_gltf.gltf" />
+    <None Include="PsMain.cso">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="VsMain.cso">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\duck\textures\DuckCM.png" />
@@ -268,6 +276,39 @@
     <Image Include="assets\strawberry\Texture\Strawberry_basecolor.jpg" />
     <Image Include="assets\strawberry\Texture\Strawberry_Normal.jpg" />
     <Image Include="assets\strawberry\Texture\Strawberry_Roughness.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="dx12\shaders\Common.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="dx12\shaders\PsMain.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PsMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PsMain</EntryPointName>
+      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableDebuggingInformation>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="dx12\shaders\VsMain.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VSMain</EntryPointName>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
