@@ -15,15 +15,16 @@ public:
 
 	void Run() override;
 
-	static ID3D12Resource* Dx12CreateBufferAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData);
-	static ID3D12Resource* Dx12CreateTextureAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels);
+	static ID3D12Resource* CreateBufferAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData);
+	static ID3D12Resource* CreateTextureAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels);
+	static D3D12_GPU_DESCRIPTOR_HANDLE TextureDescriptorAllocate(ID3D12Resource* gpuTexture);
 
 private:
 	IDXGIAdapter1* adapter;
 	ID3D12Device* device;
 	ID3D12CommandQueue* commandQueue;
 
-	Dx12UploadBuffer uploadArena;
+	Dx12UploadBuffer uploadBuffer;
 	Dx12PlacementHeap rtvArena;
 	Dx12PlacementHeap bufferArena;
 	Dx12PlacementHeap textureArena;
@@ -44,16 +45,17 @@ private:
 
 	Dx12DescriptorHeap rtvHeap;
 	Dx12DescriptorHeap dsvHeap;	
+	Dx12DescriptorHeap shaderDescriptorHeap;
 
 	void WaitForGpu();
 	void TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 
-	ID3D12Resource* Dx12CreateResource(Dx12PlacementHeap* placementHeap, D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, D3D12_CLEAR_VALUE* clearValues);
-	ID3D12Resource* Dx12CreateBufferAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData);
-	ID3D12Resource* Dx12CreateTextureAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels);
-	Dx12DescriptorHeap Dx12DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors);
-	D3D12_CPU_DESCRIPTOR_HANDLE Dx12DescriptorAllocate(Dx12DescriptorHeap* descriptorHeap);
-	Dx12UploadBuffer Dx12UploadArenaCreate(u64 size);
-	u8* Dx12UploadArenaPushSize(Dx12UploadBuffer* buffer, u64 size, u64* outOffset);
-	void Dx12ClearUploadArena(Dx12UploadBuffer* buffer);
+	ID3D12Resource* CreateResource(Dx12PlacementHeap* placementHeap, D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, D3D12_CLEAR_VALUE* clearValues);
+	ID3D12Resource* CreateBufferAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData);
+	ID3D12Resource* CreateTextureAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels);
+	Dx12DescriptorHeap DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
+	void DescriptorAllocate(Dx12DescriptorHeap* heap, D3D12_CPU_DESCRIPTOR_HANDLE* outCpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE* outGpuHandle);
+	Dx12UploadBuffer UploadBufferCreate(u64 size);
+	u8* UploadArenaPushSize(Dx12UploadBuffer* buffer, u64 size, u64* outOffset);
+	void ClearUploadBuffer(Dx12UploadBuffer* buffer);
 };

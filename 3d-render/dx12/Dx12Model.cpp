@@ -13,6 +13,7 @@ Dx12Model::Dx12Model(Model& model)
 	gpuVertexBuffer = CreateVertexBuffer(model.vertices);
 	gpuIndexBuffer = CreateIndexBuffer(model.indices);
 	gpuTexture = CreateTexture(*model.texture);
+	gpuDescriptor = Dx12GlobalContext::TextureDescriptorAllocate(gpuTexture);
 }
 
 Dx12Model::Dx12Model(Model&& model)
@@ -64,7 +65,7 @@ ID3D12Resource* Dx12Model::CreateVertexBuffer(std::vector<Vertex>& vertices)
 	desc.SampleDesc.Count = 1;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	return Dx12GlobalContext::Dx12CreateBufferAsset(&desc, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertices.data());
+	return Dx12GlobalContext::CreateBufferAsset(&desc, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, vertices.data());
 }
 
 ID3D12Resource* Dx12Model::CreateIndexBuffer(std::vector<u32>& indices)
@@ -79,7 +80,7 @@ ID3D12Resource* Dx12Model::CreateIndexBuffer(std::vector<u32>& indices)
 	desc.SampleDesc.Count = 1;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	return Dx12GlobalContext::Dx12CreateBufferAsset(&desc, D3D12_RESOURCE_STATE_INDEX_BUFFER, indices.data());
+	return Dx12GlobalContext::CreateBufferAsset(&desc, D3D12_RESOURCE_STATE_INDEX_BUFFER, indices.data());
 }
 
 ID3D12Resource* Dx12Model::CreateTexture(Texture& texture)
@@ -94,5 +95,5 @@ ID3D12Resource* Dx12Model::CreateTexture(Texture& texture)
 	desc.SampleDesc.Count = 1;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 
-	return Dx12GlobalContext::Dx12CreateTextureAsset(&desc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, (u8*)texture.getTexels());
+	return Dx12GlobalContext::CreateTextureAsset(&desc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, (u8*)texture.getTexels());
 }

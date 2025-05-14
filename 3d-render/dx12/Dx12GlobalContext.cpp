@@ -54,14 +54,15 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 
 	rtvArena = Dx12PlacementHeap(device, D3D12_HEAP_TYPE_DEFAULT, MegaBytes(50), D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES);
 
-	uploadArena = Dx12UploadArenaCreate(MegaBytes(500));
+	uploadBuffer = UploadBufferCreate(MegaBytes(500));
 
 	bufferArena = Dx12PlacementHeap(device, D3D12_HEAP_TYPE_DEFAULT, MegaBytes(100), D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS);
 
 	textureArena = Dx12PlacementHeap(device, D3D12_HEAP_TYPE_DEFAULT, MegaBytes(1000), D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES);
 
-	rtvHeap = Dx12DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2);
-	dsvHeap = Dx12DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
+	rtvHeap = DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2);
+	dsvHeap = DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
+	shaderDescriptorHeap = DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 50, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
 
 	D3D12_RESOURCE_DESC desc = {};
 	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -78,13 +79,13 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 	clearValue.Format = desc.Format;
 	clearValue.DepthStencil.Depth = 1;
 
-	depthBuffer = Dx12CreateResource(&rtvArena, &desc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue);
-	depthDescriptor = Dx12DescriptorAllocate(&dsvHeap);
+	depthBuffer = CreateResource(&rtvArena, &desc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue);
+	DescriptorAllocate(&dsvHeap, &depthDescriptor, nullptr);
 	device->CreateDepthStencilView(depthBuffer, 0, depthDescriptor);
 
-	frameBufferDescriptors[0] = Dx12DescriptorAllocate(&rtvHeap);
+	DescriptorAllocate(&rtvHeap, &frameBufferDescriptors[0], nullptr);
 	device->CreateRenderTargetView(frameBuffers[0], nullptr, frameBufferDescriptors[0]);
-	frameBufferDescriptors[1] = Dx12DescriptorAllocate(&rtvHeap);
+	DescriptorAllocate(&rtvHeap, &frameBufferDescriptors[1], nullptr);
 	device->CreateRenderTargetView(frameBuffers[1], nullptr, frameBufferDescriptors[1]);
 }
 
@@ -98,7 +99,7 @@ void Dx12GlobalContext::Run()
 	ThrowIfFailed(commandAllocator->Reset());
 	ThrowIfFailed(commandList->Reset(commandAllocator, 0));
 
-	Dx12ClearUploadArena(&uploadArena);
+	ClearUploadBuffer(&uploadBuffer);
 
 	isRunning = true;
 
@@ -170,7 +171,7 @@ void Dx12GlobalContext::TransitionResource(ID3D12Resource* resource, D3D12_RESOU
 	commandList->ResourceBarrier(1, &barrier);
 }
 
-ID3D12Resource* Dx12GlobalContext::Dx12CreateResource(Dx12PlacementHeap* placementHeap, D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, D3D12_CLEAR_VALUE* clearValues)
+ID3D12Resource* Dx12GlobalContext::CreateResource(Dx12PlacementHeap* placementHeap, D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, D3D12_CLEAR_VALUE* clearValues)
 {
 	ID3D12Resource* result = nullptr;
 
@@ -184,23 +185,23 @@ ID3D12Resource* Dx12GlobalContext::Dx12CreateResource(Dx12PlacementHeap* placeme
 	return result;
 }
 
-ID3D12Resource* Dx12GlobalContext::Dx12CreateBufferAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData)
+ID3D12Resource* Dx12GlobalContext::CreateBufferAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData)
 {
-	return activeInstance ? static_cast<Dx12GlobalContext*>(activeInstance)->Dx12CreateBufferAssetInternal(desc, initialState, bufferData) : nullptr;
+	return activeInstance ? static_cast<Dx12GlobalContext*>(activeInstance)->CreateBufferAssetInternal(desc, initialState, bufferData) : nullptr;
 }
 
-ID3D12Resource* Dx12GlobalContext::Dx12CreateBufferAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData)
+ID3D12Resource* Dx12GlobalContext::CreateBufferAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData)
 {
 	ID3D12Resource* result = nullptr;
 
 	u64 uploadOffset = 0;
 	{
-		u8* Dest = Dx12UploadArenaPushSize(&uploadArena, desc->Width, &uploadOffset);
+		u8* Dest = UploadArenaPushSize(&uploadBuffer, desc->Width, &uploadOffset);
 		memcpy(Dest, bufferData, desc->Width);
 	}
 
-	result = Dx12CreateResource(&bufferArena, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);
-	commandList->CopyBufferRegion(result, 0, uploadArena.gpuBuffer, uploadOffset, desc->Width);
+	result = CreateResource(&bufferArena, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);
+	commandList->CopyBufferRegion(result, 0, uploadBuffer.gpuBuffer, uploadOffset, desc->Width);
 
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -213,12 +214,12 @@ ID3D12Resource* Dx12GlobalContext::Dx12CreateBufferAssetInternal(D3D12_RESOURCE_
 	return result;
 }
 
-ID3D12Resource* Dx12GlobalContext::Dx12CreateTextureAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels)
+ID3D12Resource* Dx12GlobalContext::CreateTextureAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels)
 {
-	return activeInstance ? static_cast<Dx12GlobalContext*>(activeInstance)->Dx12CreateTextureAssetInternal(desc, initialState, texels) : nullptr;
+	return activeInstance ? static_cast<Dx12GlobalContext*>(activeInstance)->CreateTextureAssetInternal(desc, initialState, texels) : nullptr;
 }
 
-ID3D12Resource* Dx12GlobalContext::Dx12CreateTextureAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels)
+ID3D12Resource* Dx12GlobalContext::CreateTextureAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels)
 {
 	D3D12_RESOURCE_ALLOCATION_INFO allocationInfo = device->GetResourceAllocationInfo(0, 1, desc);
 	u64 bytesPerPixel = Utils::Dx12GetBytesPerPixel(desc->Format);
@@ -233,7 +234,7 @@ ID3D12Resource* Dx12GlobalContext::Dx12CreateTextureAssetInternal(D3D12_RESOURCE
 	footPrint.RowPitch = Utils::Align(footPrint.Width * bytesPerPixel, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 	PlacedFootPrint.Footprint = footPrint;
 
-	u8* DestTexels = Dx12UploadArenaPushSize(&uploadArena, footPrint.Height * footPrint.RowPitch, &PlacedFootPrint.Offset);
+	u8* DestTexels = UploadArenaPushSize(&uploadBuffer, footPrint.Height * footPrint.RowPitch, &PlacedFootPrint.Offset);
 
 	for (u32 Y = 0; Y < desc->Height; ++Y)
 	{
@@ -242,10 +243,10 @@ ID3D12Resource* Dx12GlobalContext::Dx12CreateTextureAssetInternal(D3D12_RESOURCE
 		memcpy(dest, src, bytesPerPixel * desc->Width);
 	}
 
-	ID3D12Resource* result = Dx12CreateResource(&textureArena, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);
+	ID3D12Resource* result = CreateResource(&textureArena, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);
 
 	D3D12_TEXTURE_COPY_LOCATION sourceRegion = {};
-	sourceRegion.pResource = uploadArena.gpuBuffer;
+	sourceRegion.pResource = uploadBuffer.gpuBuffer;
 	sourceRegion.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	sourceRegion.PlacedFootprint = PlacedFootPrint;
 
@@ -267,34 +268,68 @@ ID3D12Resource* Dx12GlobalContext::Dx12CreateTextureAssetInternal(D3D12_RESOURCE
 	return result;
 }
 
-Dx12DescriptorHeap Dx12GlobalContext::Dx12DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors)
+Dx12DescriptorHeap Dx12GlobalContext::DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags)
 {
 	Dx12DescriptorHeap result = {};
 
 	result.maxElements = numDescriptors;
 	result.stepSize = device->GetDescriptorHandleIncrementSize(type);
 
-	D3D12_DESCRIPTOR_HEAP_DESC Desc = {};
-	Desc.Type = type;
-	Desc.NumDescriptors = numDescriptors;
-	Desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	ThrowIfFailed(device->CreateDescriptorHeap(&Desc, IID_PPV_ARGS(&result.heap)));
+	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+	desc.Type = type;
+	desc.NumDescriptors = numDescriptors;
+	desc.Flags = flags;
+	ThrowIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&result.heap)));
 
 	return result;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE Dx12GlobalContext::Dx12DescriptorAllocate(Dx12DescriptorHeap* descriptorHeap)
+D3D12_GPU_DESCRIPTOR_HANDLE Dx12GlobalContext::TextureDescriptorAllocate(ID3D12Resource* gpuTexture)
 {
-	Assert(descriptorHeap->currentElement < descriptorHeap->maxElements);
-	D3D12_CPU_DESCRIPTOR_HANDLE result = descriptorHeap->heap->GetCPUDescriptorHandleForHeapStart();
-	result.ptr += descriptorHeap->stepSize * descriptorHeap->currentElement;
+	if (activeInstance == nullptr)
+	{
+		return {};
+	}
+	
+	Dx12GlobalContext* context = static_cast<Dx12GlobalContext*>(activeInstance);
 
-	descriptorHeap->currentElement += 1;
+	D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	desc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(0, 1, 2, 3);
+	desc.Texture2D.MostDetailedMip = 0;
+	desc.Texture2D.MipLevels = 1;
+	desc.Texture2D.PlaneSlice = 0;
 
-	return result;
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptor = {};
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor = {};
+	context->DescriptorAllocate(&context->shaderDescriptorHeap, &cpuDescriptor, &gpuDescriptor);
+	context->device->CreateShaderResourceView(gpuTexture, &desc, cpuDescriptor);
+	return gpuDescriptor;
 }
 
-Dx12UploadBuffer Dx12GlobalContext::Dx12UploadArenaCreate(u64 size)
+void Dx12GlobalContext::DescriptorAllocate(Dx12DescriptorHeap* heap, D3D12_CPU_DESCRIPTOR_HANDLE* outCpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE* outGpuHandle)
+{
+	Assert(heap->currentElement < heap->maxElements);
+
+	if (outCpuHandle)
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = heap->heap->GetCPUDescriptorHandleForHeapStart();
+		cpuHandle.ptr += heap->stepSize * heap->currentElement;
+		*outCpuHandle = cpuHandle;
+	}
+
+	if (outGpuHandle)
+	{
+		D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = heap->heap->GetGPUDescriptorHandleForHeapStart();
+		gpuHandle.ptr += heap->stepSize * heap->currentElement;
+		*outGpuHandle = gpuHandle;
+	}
+
+	heap->currentElement += 1;
+}
+
+Dx12UploadBuffer Dx12GlobalContext::UploadBufferCreate(u64 size)
 {
 	Dx12UploadBuffer result = {};
 	result.size = size;
@@ -319,7 +354,7 @@ Dx12UploadBuffer Dx12GlobalContext::Dx12UploadArenaCreate(u64 size)
 	return result;
 }
 
-u8* Dx12GlobalContext::Dx12UploadArenaPushSize(Dx12UploadBuffer* buffer, u64 size, u64* outOffset)
+u8* Dx12GlobalContext::UploadArenaPushSize(Dx12UploadBuffer* buffer, u64 size, u64* outOffset)
 {
 	u64 alignedOffset = Utils::Align(buffer->used, D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
 	Assert((alignedOffset + size) < buffer->size);
@@ -331,7 +366,7 @@ u8* Dx12GlobalContext::Dx12UploadArenaPushSize(Dx12UploadBuffer* buffer, u64 siz
 	return result;
 }
 
-void Dx12GlobalContext::Dx12ClearUploadArena(Dx12UploadBuffer* buffer)
+void Dx12GlobalContext::ClearUploadBuffer(Dx12UploadBuffer* buffer)
 {
 	buffer->used = 0;
 }

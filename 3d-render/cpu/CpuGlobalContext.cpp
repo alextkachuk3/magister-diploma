@@ -24,7 +24,7 @@ void CpuGlobalContext::Run()
 	Model strawberry = ModelLoader::LoadModelFromFile("./assets/strawberry/Strawberry_gltf.gltf", "./assets/strawberry/Texture/Strawberry_basecolor.jpg");
 	SceneModel scene = ModelLoader::LoadSceneModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
 
-	std::vector<Model> models;	
+	std::vector<Model> models;
 
 	for (const auto& mesh : scene.meshes)
 	{
@@ -83,11 +83,11 @@ void CpuGlobalContext::RenderFrame() const
 
 	Assert(StretchDIBits(
 		deviceContext,
-		0, 
 		0,
-		frameBufferWidth, 
+		0,
+		frameBufferWidth,
 		frameBufferHeight,
-		0, 
+		0,
 		0,
 		frameBufferWidth,
 		frameBufferHeight,
@@ -112,8 +112,7 @@ void CpuGlobalContext::RenderModel(const Model& model, const M4& modelTransform)
 		u32 Index1 = model.indices[i + 1];
 		u32 Index2 = model.indices[i + 2];
 
-		DrawTriangle(
-			TransformedVertices[Index0], TransformedVertices[Index1], TransformedVertices[Index2],
+		DrawTriangle(TransformedVertices[Index0], TransformedVertices[Index1], TransformedVertices[Index2],
 			model.vertices[Index0].uv, model.vertices[Index1].uv, model.vertices[Index2].uv, *model.texture);
 	}
 
@@ -141,11 +140,7 @@ void CpuGlobalContext::DrawTriangle(const V4& ModelVertex0, const V4& ModelVerte
 
 	for (u32 i = 0; i < pong.GetTriangleCount(); ++i)
 	{
-		DrawTriangle(
-			pong.GetVertex(i * 3 + 0),
-			pong.GetVertex(i * 3 + 1),
-			pong.GetVertex(i * 3 + 2),
-			Texture);
+		DrawTriangle(pong.GetVertex(i * 3 + 0), pong.GetVertex(i * 3 + 1), pong.GetVertex(i * 3 + 2), Texture);
 	}
 }
 
@@ -267,7 +262,7 @@ void CpuGlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex&
 
 						const int pointsCount = 4;
 
-						V2i texelPos[pointsCount] = 
+						V2i texelPos[pointsCount] =
 						{
 							V2i(static_cast<i32>(floorf(texelV2.x)), static_cast<i32>(floorf(texelV2.y))),
 							V2i(static_cast<i32>(floorf(texelV2.x)) + 1, static_cast<i32>(floorf(texelV2.y))),
