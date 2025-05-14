@@ -25,6 +25,11 @@ u32 Texture::operator[](const u32 index) const
 	return texels[index];
 }
 
+u32* Texture::getTexels() const
+{
+	return texels.get();
+}
+
 Texture Texture::generateCheckerboardTexture(u32 width, u32 height, u32 squareSize, u32 color1, u32 color2)
 {
     Texture result(width, height);

@@ -22,10 +22,14 @@ void CpuGlobalContext::Run()
 	f32 currentTime = -2.0f * Constants::PI;
 
 	Model strawberry = ModelLoader::LoadModelFromFile("./assets/strawberry/Strawberry_gltf.gltf", "./assets/strawberry/Texture/Strawberry_basecolor.jpg");
+	SceneModel scene = ModelLoader::LoadSceneModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
 
 	std::vector<Model> models;	
 
-	models.push_back(strawberry);
+	for (const auto& mesh : scene.meshes)
+	{
+		models.push_back(mesh);
+	}
 
 	while (isRunning)
 	{
@@ -99,7 +103,7 @@ void CpuGlobalContext::RenderModel(const Model& model, const M4& modelTransform)
 	V4* TransformedVertices = new V4[model.vertices.size()];
 	for (u32 VertexId = 0; VertexId < model.vertices.size(); ++VertexId)
 	{
-		TransformedVertices[VertexId] = (modelTransform * V4(model.vertices[VertexId], 1.0f));
+		TransformedVertices[VertexId] = (modelTransform * V4(model.vertices[VertexId].position, 1.0f));
 	}
 
 	for (size_t i = 0; i < model.indices.size(); i += 3)
@@ -110,7 +114,7 @@ void CpuGlobalContext::RenderModel(const Model& model, const M4& modelTransform)
 
 		DrawTriangle(
 			TransformedVertices[Index0], TransformedVertices[Index1], TransformedVertices[Index2],
-			model.uvs[Index0], model.uvs[Index1], model.uvs[Index2], *model.texture);
+			model.vertices[Index0].uv, model.vertices[Index1].uv, model.vertices[Index2].uv, *model.texture);
 	}
 
 	delete[] TransformedVertices;

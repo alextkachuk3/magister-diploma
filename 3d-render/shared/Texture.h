@@ -16,6 +16,7 @@ public:
 	u32 getHeight() const;
 
 	u32 operator[](const u32 index) const;
+	u32* getTexels() const;
 
 	static Texture generateCheckerboardTexture(u32 width, u32 height, u32 squareSize, u32 color1, u32 color2);
 	static Texture CreateSolidColor(u32 width, u32 height, u32 color);

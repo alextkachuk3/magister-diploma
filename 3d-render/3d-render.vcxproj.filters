@@ -97,9 +97,6 @@
     <ClInclude Include="shared\FrameTimeLogger.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="shared\GlobalContext.h">
-      <Filter>Shared\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="shared\Model.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
@@ -122,6 +119,27 @@
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dx12\Dx12GlobalContext.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12Model.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\Vertex.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12PlacementHeap.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\GlobalContext.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12UploadBuffer.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12DescriptorHeap.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12SceneModel.h">
       <Filter>Dx12\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -156,9 +174,6 @@
     <ClCompile Include="shared\FrameTimeLogger.cpp">
       <Filter>Shared\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="shared\GlobalContext.cpp">
-      <Filter>Shared\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="shared\Model.cpp">
       <Filter>Shared\Source Files</Filter>
     </ClCompile>
@@ -175,6 +190,18 @@
       <Filter>Shared\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dx12\Dx12GlobalContext.cpp">
+      <Filter>Dx12\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Dx12Model.cpp">
+      <Filter>Dx12\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Dx12PlacementHeap.cpp">
+      <Filter>Dx12\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\GlobalContext.cpp">
+      <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Dx12SceneModel.cpp">
       <Filter>Dx12\Source Files</Filter>
     </ClCompile>
   </ItemGroup>

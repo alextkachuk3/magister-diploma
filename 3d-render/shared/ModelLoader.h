@@ -5,6 +5,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "Model.h"
+#include "Vertex.h"
 #include "Utils.h"
 #include "SceneModel.h"
 

@@ -138,7 +138,12 @@
     <ClInclude Include="cpu\ClipResult.h" />
     <ClInclude Include="cpu\ClipVertex.h" />
     <ClInclude Include="cpu\CpuGlobalContext.h" />
+    <ClInclude Include="dx12\Dx12DescriptorHeap.h" />
     <ClInclude Include="dx12\Dx12GlobalContext.h" />
+    <ClInclude Include="dx12\Dx12Model.h" />
+    <ClInclude Include="dx12\Dx12PlacementHeap.h" />
+    <ClInclude Include="dx12\Dx12SceneModel.h" />
+    <ClInclude Include="dx12\Dx12UploadBuffer.h" />
     <ClInclude Include="shared\Camera.h" />
     <ClInclude Include="shared\Colors.h" />
     <ClInclude Include="shared\Constants.h" />
@@ -155,12 +160,16 @@
     <ClInclude Include="shared\Texture.h" />
     <ClInclude Include="shared\Typedefs.h" />
     <ClInclude Include="shared\Utils.h" />
+    <ClInclude Include="shared\Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cpu\ClipResult.cpp" />
     <ClCompile Include="cpu\ClipVertex.cpp" />
     <ClCompile Include="cpu\CpuGlobalContext.cpp" />
     <ClCompile Include="dx12\Dx12GlobalContext.cpp" />
+    <ClCompile Include="dx12\Dx12Model.cpp" />
+    <ClCompile Include="dx12\Dx12PlacementHeap.cpp" />
+    <ClCompile Include="dx12\Dx12SceneModel.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shared\Camera.cpp" />
     <ClCompile Include="shared\FrameTimeLogger.cpp" />

@@ -32,12 +32,15 @@ Model ModelLoader::LoadModelFromFile(const std::string& modelPath, const std::st
 
 	for (u32 i = 0; i < mesh->mNumVertices; ++i)
 	{
-		model.vertices.push_back(ConvertVector(mesh->mVertices[i]));
+		Vertex vertex;
+		vertex.position = ConvertVector(mesh->mVertices[i]);
 
 		if (mesh->HasTextureCoords(0))
-			model.uvs.push_back(ConvertUV(mesh->mTextureCoords[0][i]));
+			vertex.uv = ConvertUV(mesh->mTextureCoords[0][i]);
 		else
-			model.uvs.emplace_back(0.0f, 0.0f);
+			vertex.uv = V2f(0.0f, 0.0f);
+
+		model.vertices.push_back(vertex);
 	}
 
 	for (u32 i = 0; i < mesh->mNumFaces; ++i)
@@ -78,13 +81,18 @@ SceneModel ModelLoader::LoadSceneModelFromFile(const std::string& modelPath, con
 		aiMesh* mesh = scene->mMeshes[meshIndex];
 		Model model;
 
+		model.indices.reserve(mesh->mNumFaces * 3);
+		model.vertices.reserve(mesh->mNumVertices);
+
 		for (u32 i = 0; i < mesh->mNumVertices; ++i)
 		{
-			model.vertices.push_back(ConvertVector(mesh->mVertices[i]));
+			Vertex vertex;
+			vertex.position = ConvertVector(mesh->mVertices[i]);
 			if (mesh->HasTextureCoords(0))
-				model.uvs.push_back(ConvertUV(mesh->mTextureCoords[0][i]));
+				vertex.uv = ConvertUV(mesh->mTextureCoords[0][i]);
 			else
-				model.uvs.emplace_back(0.0f, 0.0f);
+				vertex.uv = V2f(0.0f, 0.0f);
+			model.vertices.push_back(vertex);
 		}
 
 		for (u32 i = 0; i < mesh->mNumFaces; ++i)
