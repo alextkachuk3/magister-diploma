@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <Dx12Model.h>
-#include "Dx12SceneModel.h"
 
 class Dx12SceneModel
 {

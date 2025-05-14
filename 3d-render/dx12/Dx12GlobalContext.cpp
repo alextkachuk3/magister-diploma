@@ -87,6 +87,9 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 	device->CreateRenderTargetView(frameBuffers[0], nullptr, frameBufferDescriptors[0]);
 	DescriptorAllocate(&rtvHeap, &frameBufferDescriptors[1], nullptr);
 	device->CreateRenderTargetView(frameBuffers[1], nullptr, frameBufferDescriptors[1]);
+
+	Dx12ShaderBytecode vertexShader(L"./VsMain.cso");
+	Dx12ShaderBytecode pixelShader(L"./PsMain.cso");
 }
 
 void Dx12GlobalContext::Run()

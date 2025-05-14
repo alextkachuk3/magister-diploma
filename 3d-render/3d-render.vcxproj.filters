@@ -59,6 +59,12 @@
     <Filter Include="Resourse Files\Assets\Strawberry">
       <UniqueIdentifier>{cd2ffe66-035c-4793-b8d7-c9efe95140d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Dx12\Shaders">
+      <UniqueIdentifier>{16da4d79-dce8-4f1b-bbf7-b20fec9f66a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dx12\Header Files\ShaderBytecode">
+      <UniqueIdentifier>{e7f93fed-eff5-41e2-990f-e1c8d83cc669}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cpu\ClipAxis.h">
@@ -142,6 +148,9 @@
     <ClInclude Include="dx12\Dx12SceneModel.h">
       <Filter>Dx12\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dx12\Dx12ShaderBytecode.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -204,6 +213,9 @@
     <ClCompile Include="dx12\Dx12SceneModel.cpp">
       <Filter>Dx12\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dx12\Dx12ShaderBytecode.cpp">
+      <Filter>Dx12\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\duck\Duck.gltf">
@@ -226,6 +238,12 @@
     </None>
     <None Include="assets\strawberry\Strawberry_gltf.gltf">
       <Filter>Resourse Files\Assets\Strawberry</Filter>
+    </None>
+    <None Include="PsMain.cso">
+      <Filter>Dx12\Header Files\ShaderBytecode</Filter>
+    </None>
+    <None Include="VsMain.cso">
+      <Filter>Dx12\Header Files\ShaderBytecode</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -451,5 +469,16 @@
     <Image Include="assets\strawberry\Texture\Strawberry_Roughness.jpg">
       <Filter>Resourse Files\Assets\Strawberry</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="dx12\shaders\VsMain.hlsl">
+      <Filter>Dx12\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="dx12\shaders\PsMain.hlsl">
+      <Filter>Dx12\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="dx12\shaders\Common.hlsl">
+      <Filter>Dx12\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

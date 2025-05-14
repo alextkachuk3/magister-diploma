@@ -7,6 +7,7 @@
 #include <Dx12UploadBuffer.h>
 #include <Dx12Model.h>
 #include <Dx12DescriptorHeap.h>
+#include "Dx12ShaderBytecode.h"
 
 class Dx12GlobalContext : public GlobalContext
 {
