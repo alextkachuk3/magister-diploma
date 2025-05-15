@@ -259,8 +259,6 @@ void Dx12GlobalContext::Run()
 
 	std::vector<Dx12Model> models;
 
-	models.push_back(dx12fox);
-
 	for (const Dx12Model& model : dx12Scene.meshes)
 	{
 		models.push_back(model);
