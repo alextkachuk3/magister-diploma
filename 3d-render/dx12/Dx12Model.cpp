@@ -8,8 +8,21 @@ Dx12Model::Dx12Model()
 	gpuDescriptor.ptr = 0;
 }
 
+u32 Dx12Model::GetVertexCount() const
+{
+	return vertexCount;
+}
+
+u32 Dx12Model::GetIndexCount() const
+{
+	return indexCount;
+}
+
 Dx12Model::Dx12Model(Model& model)
 {
+	vertexCount = static_cast<u32>(model.vertices.size());
+	indexCount = static_cast<u32>(model.indices.size());
+
 	gpuVertexBuffer = CreateVertexBuffer(model.vertices);
 	gpuIndexBuffer = CreateIndexBuffer(model.indices);
 	gpuTexture = CreateTexture(*model.texture);
@@ -18,9 +31,13 @@ Dx12Model::Dx12Model(Model& model)
 
 Dx12Model::Dx12Model(Model&& model)
 {
+	vertexCount = static_cast<u32>(model.vertices.size());
+	indexCount = static_cast<u32>(model.indices.size());
+
 	gpuVertexBuffer = CreateVertexBuffer(model.vertices);
 	gpuIndexBuffer = CreateIndexBuffer(model.indices);
 	gpuTexture = CreateTexture(*model.texture);
+	gpuDescriptor = Dx12GlobalContext::TextureDescriptorAllocate(gpuTexture);
 
 	model.vertices.clear();
 	model.indices.clear();
@@ -29,22 +46,30 @@ Dx12Model::Dx12Model(Model&& model)
 
 Dx12Model& Dx12Model::operator=(Model& model)
 {
-	if (this != nullptr) 
+	if (this != nullptr)
 	{
+		vertexCount = static_cast<u32>(model.vertices.size());
+		indexCount = static_cast<u32>(model.indices.size());
+
 		gpuVertexBuffer = CreateVertexBuffer(model.vertices);
 		gpuIndexBuffer = CreateIndexBuffer(model.indices);
 		gpuTexture = CreateTexture(*model.texture);
+		gpuDescriptor = Dx12GlobalContext::TextureDescriptorAllocate(gpuTexture);
 	}
 	return *this;
 }
 
 Dx12Model& Dx12Model::operator=(Model&& model)
 {
-	if (this != nullptr) 
+	if (this != nullptr)
 	{
+		vertexCount = static_cast<u32>(model.vertices.size());
+		indexCount = static_cast<u32>(model.indices.size());
+
 		gpuVertexBuffer = CreateVertexBuffer(model.vertices);
 		gpuIndexBuffer = CreateIndexBuffer(model.indices);
 		gpuTexture = CreateTexture(*model.texture);
+		gpuDescriptor = Dx12GlobalContext::TextureDescriptorAllocate(gpuTexture);
 
 		model.vertices.clear();
 		model.indices.clear();

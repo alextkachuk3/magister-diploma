@@ -8,6 +8,7 @@
 
 #define Assert(Expression) if (!(Expression)) {__debugbreak();}
 #define AssertMsg(Msg) { OutputDebugStringA(Msg); Assert(false);}
+#define ArraySize(Array) (sizeof(Array) / sizeof((Array)[0]))
 
 void ThrowIfFailed(HRESULT result);
 

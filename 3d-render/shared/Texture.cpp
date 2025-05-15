@@ -96,7 +96,7 @@ Texture Texture::LoadFromFile(const std::string& path)
 		stbi_uc b = data[i * 4 + 2];
 		stbi_uc a = data[i * 4 + 3];
 
-		result.texels[i] = ((u32)a << 24) | ((u32)r << 16) | ((u32)g << 8) | (u32)b;
+		result.texels[i] = ((u32)r << 0) | ((u32)g << 8) | ((u32)b << 16) | ((u32)a << 24);
 	}
 
 	stbi_image_free(data);

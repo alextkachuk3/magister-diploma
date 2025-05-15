@@ -12,7 +12,6 @@ private:
 
 	SamplerType samplerType;
 	V3 borderColor;
-	Camera camera;
 
 public:
 	CpuGlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height);

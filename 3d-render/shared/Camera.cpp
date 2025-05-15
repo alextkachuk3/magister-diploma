@@ -67,7 +67,7 @@ void Camera::UpdateViewMatrix(f32 frameTime, bool wPressed, bool aPressed, bool 
 	V3 up = V3::Normalize((axisTransform * V4(0.0f, 1.0f, 0.0f, 0.0f)).xyz);
 	V3 lookAt = V3::Normalize((axisTransform * V4(0.0f, 0.0f, 1.0f, 0.0f)).xyz);
 
-	f32 speed = frameTime * 50.0f;
+	f32 speed = frameTime * 400.0f;
 
 	if (wPressed)
 		move(lookAt * speed);

@@ -50,6 +50,7 @@ protected:
 	f32 frameBufferHeightF32;
 	f32 aspectRatio;
 
+	Camera camera;
 	FrameTimeLogger frameTimeLogger;
 
 	static GlobalContext* activeInstance;

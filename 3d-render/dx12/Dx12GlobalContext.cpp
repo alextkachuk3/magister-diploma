@@ -52,17 +52,17 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 	ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
 	fenceValue = 0;
 
-	rtvArena = Dx12PlacementHeap(device, D3D12_HEAP_TYPE_DEFAULT, MegaBytes(50), D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES);
+	rtvPlacement = Dx12PlacementHeap(device, D3D12_HEAP_TYPE_DEFAULT, MegaBytes(500), D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES);
 
 	uploadBuffer = UploadBufferCreate(MegaBytes(500));
 
-	bufferArena = Dx12PlacementHeap(device, D3D12_HEAP_TYPE_DEFAULT, MegaBytes(100), D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS);
+	bufferPlacement = Dx12PlacementHeap(device, D3D12_HEAP_TYPE_DEFAULT, MegaBytes(500), D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS);
 
-	textureArena = Dx12PlacementHeap(device, D3D12_HEAP_TYPE_DEFAULT, MegaBytes(1000), D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES);
+	texturePlacement = Dx12PlacementHeap(device, D3D12_HEAP_TYPE_DEFAULT, MegaBytes(500), D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES);
 
 	rtvHeap = DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2);
 	dsvHeap = DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
-	shaderDescriptorHeap = DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 50, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+	shaderDescriptorHeap = DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 150, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
 
 	D3D12_RESOURCE_DESC desc = {};
 	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -79,7 +79,7 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 	clearValue.Format = desc.Format;
 	clearValue.DepthStencil.Depth = 1;
 
-	depthBuffer = CreateResource(&rtvArena, &desc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue);
+	depthBuffer = CreateResource(&rtvPlacement, &desc, D3D12_RESOURCE_STATE_DEPTH_WRITE, &clearValue);
 	DescriptorAllocate(&dsvHeap, &depthDescriptor, nullptr);
 	device->CreateDepthStencilView(depthBuffer, 0, depthDescriptor);
 
@@ -90,21 +90,166 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 
 	Dx12ShaderBytecode vertexShader(L"./VsMain.cso");
 	Dx12ShaderBytecode pixelShader(L"./PsMain.cso");
+
+	CreateRootSignatureAndPipelineState(vertexShader, pixelShader);
+	CreateTransformBuffer();
+}
+
+void Dx12GlobalContext::CreateRootSignatureAndPipelineState(Dx12ShaderBytecode& vertexShader, Dx12ShaderBytecode& pixelShader)
+{
+	{
+		D3D12_ROOT_PARAMETER RootParameters[2] = {};
+
+		D3D12_DESCRIPTOR_RANGE Table1Range[1] = {};
+		{
+			Table1Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			Table1Range[0].NumDescriptors = 1;
+			Table1Range[0].BaseShaderRegister = 0;
+			Table1Range[0].RegisterSpace = 0;
+			Table1Range[0].OffsetInDescriptorsFromTableStart = 0;
+
+			RootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			RootParameters[0].DescriptorTable.NumDescriptorRanges = ArraySize(Table1Range);
+			RootParameters[0].DescriptorTable.pDescriptorRanges = Table1Range;
+			RootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		}
+
+		D3D12_DESCRIPTOR_RANGE Table2Range[1] = {};
+		{
+			Table2Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+			Table2Range[0].NumDescriptors = 1;
+			Table2Range[0].BaseShaderRegister = 0;
+			Table2Range[0].RegisterSpace = 0;
+			Table2Range[0].OffsetInDescriptorsFromTableStart = 0;
+
+			RootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			RootParameters[1].DescriptorTable.NumDescriptorRanges = ArraySize(Table2Range);
+			RootParameters[1].DescriptorTable.pDescriptorRanges = Table2Range;
+			RootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		}
+
+		D3D12_STATIC_SAMPLER_DESC StaticSamplerDesc = {};
+		StaticSamplerDesc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+		StaticSamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		StaticSamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		StaticSamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		StaticSamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+		StaticSamplerDesc.ShaderRegister = 0;
+		StaticSamplerDesc.RegisterSpace = 0;
+		StaticSamplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+		D3D12_ROOT_SIGNATURE_DESC SignatureDesc = {};
+		SignatureDesc.NumParameters = ArraySize(RootParameters);
+		SignatureDesc.pParameters = RootParameters;
+		SignatureDesc.NumStaticSamplers = 1;
+		SignatureDesc.pStaticSamplers = &StaticSamplerDesc;
+		SignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+		ID3DBlob* SerializedRootSig = 0;
+		ID3DBlob* ErrorBlob = 0;
+		ThrowIfFailed(D3D12SerializeRootSignature(&SignatureDesc,
+			D3D_ROOT_SIGNATURE_VERSION_1_0,
+			&SerializedRootSig,
+			&ErrorBlob));
+		ThrowIfFailed(device->CreateRootSignature(0,
+			SerializedRootSig->GetBufferPointer(),
+			SerializedRootSig->GetBufferSize(),
+			IID_PPV_ARGS(&modelRootSignature)));
+
+		if (SerializedRootSig)
+		{
+			SerializedRootSig->Release();
+		}
+		if (ErrorBlob)
+		{
+			ErrorBlob->Release();
+		}
+	}
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
+	desc.pRootSignature = modelRootSignature;
+
+	desc.VS = vertexShader.GetBytecode();
+	desc.PS = pixelShader.GetBytecode();
+
+	desc.BlendState.RenderTarget[0].BlendEnable = true;
+	desc.BlendState.RenderTarget[0].LogicOpEnable = false;
+	desc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+	desc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
+	desc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	desc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	desc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	desc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	desc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	desc.SampleMask = 0xFFFFFFFF;
+	desc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	desc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	desc.RasterizerState.FrontCounterClockwise = FALSE;
+	desc.RasterizerState.DepthClipEnable = TRUE;
+
+	desc.DepthStencilState.DepthEnable = TRUE;
+	desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
+	inputElementDescs[0].SemanticName = "POSITION";
+	inputElementDescs[0].SemanticIndex = 0;
+	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElementDescs[0].InputSlot = 0;
+	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+
+	inputElementDescs[1].SemanticName = "TEXCOORD";
+	inputElementDescs[1].SemanticIndex = 0;
+	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	inputElementDescs[1].InputSlot = 0;
+	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+
+	desc.InputLayout.pInputElementDescs = inputElementDescs;
+	desc.InputLayout.NumElements = ArraySize(inputElementDescs);
+
+	desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	desc.NumRenderTargets = 1;
+	desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	desc.SampleDesc.Count = 1;
+
+	ThrowIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&modelPipeline)));
+}
+
+void Dx12GlobalContext::CreateTransformBuffer()
+{
+	D3D12_RESOURCE_DESC desc = {};
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	desc.Width = Utils::Align(sizeof(M4), 256);
+	desc.Height = 1;
+	desc.DepthOrArraySize = 1;
+	desc.MipLevels = 1;
+	desc.Format = DXGI_FORMAT_UNKNOWN;
+	desc.SampleDesc.Count = 1;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	transformBuffer = CreateResource(&bufferPlacement, &desc, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, nullptr);
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+	cbvDesc.BufferLocation = transformBuffer->GetGPUVirtualAddress();
+	cbvDesc.SizeInBytes = static_cast<UINT>(desc.Width);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor = {};
+	DescriptorAllocate(&shaderDescriptorHeap, &cpuDescriptor, &transformDescriptor);
+	device->CreateConstantBufferView(&cbvDesc, cpuDescriptor);
 }
 
 void Dx12GlobalContext::Run()
 {
-	ThrowIfFailed(commandList->Close());
-	commandQueue->ExecuteCommandLists(1, (ID3D12CommandList**)&commandList);
-
-	WaitForGpu();
-
-	ThrowIfFailed(commandAllocator->Reset());
-	ThrowIfFailed(commandList->Reset(commandAllocator, 0));
-
-	ClearUploadBuffer(&uploadBuffer);
-
 	isRunning = true;
+
+	LARGE_INTEGER timerFrequency;
+	QueryPerformanceFrequency(&timerFrequency);
+
+	LARGE_INTEGER beginTime;
+	QueryPerformanceCounter(&beginTime);
 
 	Model fox = ModelLoader::LoadModelFromFile("./assets/fox/Fox.gltf", "./assets/fox/Texture.png");
 	SceneModel scene = ModelLoader::LoadSceneModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
@@ -121,13 +266,77 @@ void Dx12GlobalContext::Run()
 		models.push_back(model);
 	}
 
+	ThrowIfFailed(commandList->Close());
+	commandQueue->ExecuteCommandLists(1, (ID3D12CommandList**)&commandList);
+
+	WaitForGpu();
+
+	ThrowIfFailed(commandAllocator->Reset());
+	ThrowIfFailed(commandList->Reset(commandAllocator, 0));
+
+	ClearUploadBuffer(&uploadBuffer);
+
 	while (isRunning)
 	{
+		LARGE_INTEGER endTime;
+		QueryPerformanceCounter(&endTime);
+		f32 frameTime = static_cast<f32>(endTime.QuadPart - beginTime.QuadPart) / static_cast<f32>(timerFrequency.QuadPart);
+		beginTime = endTime;
+
+		frameTimeLogger.LogFrameTime(frameTime);
+
 		TransitionResource(frameBuffers[currentFrameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 		const FLOAT color[4] = { 1, 0, 1, 1 };
 		commandList->ClearRenderTargetView(frameBufferDescriptors[currentFrameIndex], color, 0, nullptr);
 		commandList->ClearDepthStencilView(depthDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1, 0, 0, nullptr);
+
+		M4 transform = M4::Perspective(aspectRatio, 1.57f, 0.01f, 4000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 10) * M4::Rotation(0, 0, 0) * M4::Scale(1.0f, 1.0f, 1.0f);
+
+		CopyDataToBuffer(D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &transform, sizeof(M4), transformBuffer);
+
+		commandList->OMSetRenderTargets(1, frameBufferDescriptors + currentFrameIndex, 0, &depthDescriptor);
+
+		D3D12_VIEWPORT viewport = {};
+		viewport.TopLeftX = 0;
+		viewport.TopLeftY = 0;
+		viewport.Width = frameBufferWidthF32;
+		viewport.Height = frameBufferHeightF32;
+		viewport.MinDepth = 0;
+		viewport.MaxDepth = 1;
+		commandList->RSSetViewports(1, &viewport);
+
+		D3D12_RECT ScissorRect = {};
+		ScissorRect.left = 0;
+		ScissorRect.right = frameBufferWidth;
+		ScissorRect.top = 0;
+		ScissorRect.bottom = frameBufferHeight;
+		commandList->RSSetScissorRects(1, &ScissorRect);
+
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList->SetGraphicsRootSignature(modelRootSignature);
+		commandList->SetPipelineState(modelPipeline);
+		commandList->SetDescriptorHeaps(1, &shaderDescriptorHeap.heap);
+		commandList->SetGraphicsRootDescriptorTable(1, transformDescriptor);
+
+		for (const Dx12Model& model : models)
+		{
+			D3D12_INDEX_BUFFER_VIEW indexView = {};
+			indexView.BufferLocation = model.gpuIndexBuffer->GetGPUVirtualAddress();
+			indexView.SizeInBytes = sizeof(u32) * model.GetIndexCount();
+			indexView.Format = DXGI_FORMAT_R32_UINT;
+			commandList->IASetIndexBuffer(&indexView);
+
+			D3D12_VERTEX_BUFFER_VIEW vertexView = {};
+			vertexView.BufferLocation = model.gpuVertexBuffer->GetGPUVirtualAddress();
+			vertexView.SizeInBytes = sizeof(Vertex) * model.GetVertexCount();
+			vertexView.StrideInBytes = sizeof(Vertex);
+			commandList->IASetVertexBuffers(0, 1, &vertexView);
+
+			commandList->SetGraphicsRootDescriptorTable(0, model.gpuDescriptor);
+
+			commandList->DrawIndexedInstanced(model.GetIndexCount(), 1, 0, 0, 0);
+		}
 
 		TransitionResource(frameBuffers[currentFrameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
@@ -135,15 +344,18 @@ void Dx12GlobalContext::Run()
 		commandQueue->ExecuteCommandLists(1, (ID3D12CommandList**)&commandList);
 		swapChain->Present(1, 0);
 
-		fenceValue += 1;
-		ThrowIfFailed(commandQueue->Signal(fence, fenceValue));
-
 		WaitForGpu();
 
 		ThrowIfFailed(commandAllocator->Reset());
 		ThrowIfFailed(commandList->Reset(commandAllocator, nullptr));
 
 		currentFrameIndex = (currentFrameIndex + 1) % 2;
+		ClearUploadBuffer(&uploadBuffer);
+
+		camera.UpdateMouseControl(windowHandle);
+		camera.UpdateViewMatrix(frameTime, wButtonPressed, aButtonPressed, sButtonPressed, dButtonPressed);
+
+		ProcessSystemMessages();
 	}
 }
 
@@ -154,7 +366,7 @@ void Dx12GlobalContext::WaitForGpu()
 
 	if (fence->GetCompletedValue() != fenceValue)
 	{
-		HANDLE fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+		HANDLE fenceEvent = {};
 		ThrowIfFailed(fence->SetEventOnCompletion(fenceValue, fenceEvent));
 		WaitForSingleObject(fenceEvent, INFINITE);
 		CloseHandle(fenceEvent);
@@ -195,15 +407,13 @@ ID3D12Resource* Dx12GlobalContext::CreateBufferAsset(D3D12_RESOURCE_DESC* desc, 
 
 ID3D12Resource* Dx12GlobalContext::CreateBufferAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData)
 {
-	ID3D12Resource* result = nullptr;
-
 	u64 uploadOffset = 0;
 	{
 		u8* Dest = UploadArenaPushSize(&uploadBuffer, desc->Width, &uploadOffset);
 		memcpy(Dest, bufferData, desc->Width);
 	}
 
-	result = CreateResource(&bufferArena, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);
+	ID3D12Resource* result = CreateResource(&bufferPlacement, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);
 	commandList->CopyBufferRegion(result, 0, uploadBuffer.gpuBuffer, uploadOffset, desc->Width);
 
 	D3D12_RESOURCE_BARRIER barrier = {};
@@ -246,7 +456,7 @@ ID3D12Resource* Dx12GlobalContext::CreateTextureAssetInternal(D3D12_RESOURCE_DES
 		memcpy(dest, src, bytesPerPixel * desc->Width);
 	}
 
-	ID3D12Resource* result = CreateResource(&textureArena, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);
+	ID3D12Resource* result = CreateResource(&texturePlacement, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);
 
 	D3D12_TEXTURE_COPY_LOCATION sourceRegion = {};
 	sourceRegion.pResource = uploadBuffer.gpuBuffer;
@@ -293,7 +503,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE Dx12GlobalContext::TextureDescriptorAllocate(ID3D12R
 	{
 		return {};
 	}
-	
+
 	Dx12GlobalContext* context = static_cast<Dx12GlobalContext*>(activeInstance);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC desc = {};
@@ -330,6 +540,33 @@ void Dx12GlobalContext::DescriptorAllocate(Dx12DescriptorHeap* heap, D3D12_CPU_D
 	}
 
 	heap->currentElement += 1;
+}
+
+void Dx12GlobalContext::CopyDataToBuffer(D3D12_RESOURCE_STATES startState, D3D12_RESOURCE_STATES endState, void* data, u64 dataSize, ID3D12Resource* gpuBuffer)
+{
+	u64 uploadOffset = 0;
+
+	u8* dest = UploadArenaPushSize(&uploadBuffer, dataSize, &uploadOffset);
+	memcpy(dest, data, dataSize);
+
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Transition.pResource = gpuBuffer;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = startState;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+	commandList->ResourceBarrier(1, &barrier);
+
+	commandList->CopyBufferRegion(gpuBuffer, 0, uploadBuffer.gpuBuffer, uploadOffset, dataSize);
+
+	barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Transition.pResource = gpuBuffer;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	barrier.Transition.StateAfter = endState;
+	commandList->ResourceBarrier(1, &barrier);
+
 }
 
 Dx12UploadBuffer Dx12GlobalContext::UploadBufferCreate(u64 size)
