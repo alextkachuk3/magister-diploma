@@ -14,7 +14,6 @@
 #include "M4.h"
 #include "Camera.h"
 #include "Texture.h"
-#include "Model.h"
 #include "Constants.h"
 #include "SamplerType.h"
 #include "ClipAxis.h"

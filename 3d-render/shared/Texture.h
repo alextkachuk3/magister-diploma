@@ -28,5 +28,5 @@ public:
 private:
 	u32 width;
 	u32 height;
-	std::unique_ptr<u32[]> texels;
+	std::shared_ptr<u32[]> texels;
 };

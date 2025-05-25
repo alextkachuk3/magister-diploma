@@ -2,15 +2,24 @@
 
 #include <vector>
 #include <memory>
-#include <Vertex.h>
 #include "Texture.h"
+#include "Vertex.h"
+#include "Mesh.h"
 
 class Model
 {
 public:
-	std::vector<Vertex> vertices;
-	std::vector<u32> indices;
-	std::shared_ptr<Texture> texture;
+    std::vector<Vertex> vertices;
 
-	static Model CreateCube();
+    std::vector<u32> indices;
+
+    std::vector<Texture> textures;
+
+    std::vector<Mesh> meshes;
+
+    std::vector<std::vector<u32>> meshTextureIds;
+
+    void Clear();
+
+    static Model CreateCube();
 };

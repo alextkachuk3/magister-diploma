@@ -138,13 +138,6 @@
     <ClInclude Include="cpu\ClipResult.h" />
     <ClInclude Include="cpu\ClipVertex.h" />
     <ClInclude Include="cpu\CpuGlobalContext.h" />
-    <ClInclude Include="dx12\Dx12DescriptorHeap.h" />
-    <ClInclude Include="dx12\Dx12GlobalContext.h" />
-    <ClInclude Include="dx12\Dx12Model.h" />
-    <ClInclude Include="dx12\Dx12PlacementHeap.h" />
-    <ClInclude Include="dx12\Dx12SceneModel.h" />
-    <ClInclude Include="dx12\Dx12ShaderBytecode.h" />
-    <ClInclude Include="dx12\Dx12UploadBuffer.h" />
     <ClInclude Include="shared\Camera.h" />
     <ClInclude Include="shared\Colors.h" />
     <ClInclude Include="shared\Constants.h" />
@@ -154,10 +147,10 @@
     <ClInclude Include="shared\math\V2.h" />
     <ClInclude Include="shared\math\V3.h" />
     <ClInclude Include="shared\math\V4.h" />
-    <ClInclude Include="shared\Model.h" />
+    <ClInclude Include="shared\Mesh.h" />
     <ClInclude Include="shared\ModelLoader.h" />
     <ClInclude Include="shared\SamplerType.h" />
-    <ClInclude Include="shared\SceneModel.h" />
+    <ClInclude Include="shared\Model.h" />
     <ClInclude Include="shared\Texture.h" />
     <ClInclude Include="shared\Typedefs.h" />
     <ClInclude Include="shared\Utils.h" />
@@ -167,11 +160,6 @@
     <ClCompile Include="cpu\ClipResult.cpp" />
     <ClCompile Include="cpu\ClipVertex.cpp" />
     <ClCompile Include="cpu\CpuGlobalContext.cpp" />
-    <ClCompile Include="dx12\Dx12GlobalContext.cpp" />
-    <ClCompile Include="dx12\Dx12Model.cpp" />
-    <ClCompile Include="dx12\Dx12PlacementHeap.cpp" />
-    <ClCompile Include="dx12\Dx12SceneModel.cpp" />
-    <ClCompile Include="dx12\Dx12ShaderBytecode.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shared\Camera.cpp" />
     <ClCompile Include="shared\FrameTimeLogger.cpp" />
@@ -180,20 +168,18 @@
     <ClCompile Include="shared\math\V2.cpp" />
     <ClCompile Include="shared\math\V3.cpp" />
     <ClCompile Include="shared\math\V4.cpp" />
-    <ClCompile Include="shared\Model.cpp" />
     <ClCompile Include="shared\ModelLoader.cpp" />
-    <ClCompile Include="shared\SceneModel.cpp" />
+    <ClCompile Include="shared\Model.cpp" />
     <ClCompile Include="shared\Texture.cpp" />
     <ClCompile Include="shared\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\duck\Duck.gltf" />
-    <None Include="assets\duck\Duck0.bin" />
     <None Include="assets\fox\Fox.bin" />
     <None Include="assets\fox\Fox.gltf" />
+    <None Include="assets\marci\scene.bin" />
+    <None Include="assets\marci\scene.gltf" />
     <None Include="assets\sponza\Sponza.bin" />
     <None Include="assets\sponza\Sponza.gltf" />
-    <None Include="assets\strawberry\Strawberry_gltf.gltf" />
     <None Include="PsMain.cso">
       <DeploymentContent>true</DeploymentContent>
     </None>
@@ -202,8 +188,19 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assets\duck\textures\DuckCM.png" />
     <Image Include="assets\fox\Texture.png" />
+    <Image Include="assets\marci\textures\bagpack_baseColor.png" />
+    <Image Include="assets\marci\textures\bagpack_normal.png" />
+    <Image Include="assets\marci\textures\cape_baseColor.png" />
+    <Image Include="assets\marci\textures\cape_normal.png" />
+    <Image Include="assets\marci\textures\clothes_baseColor.png" />
+    <Image Include="assets\marci\textures\clothes_normal.png" />
+    <Image Include="assets\marci\textures\hair_baseColor.png" />
+    <Image Include="assets\marci\textures\hair_normal.png" />
+    <Image Include="assets\marci\textures\head_baseColor.png" />
+    <Image Include="assets\marci\textures\head_normal.png" />
+    <Image Include="assets\marci\textures\torso_baseColor.png" />
+    <Image Include="assets\marci\textures\torso_normal.png" />
     <Image Include="assets\sponza\textures\10381718147657362067.jpg" />
     <Image Include="assets\sponza\textures\10388182081421875623.jpg" />
     <Image Include="assets\sponza\textures\11474523244911310074.jpg" />
@@ -273,9 +270,6 @@
     <Image Include="assets\sponza\textures\9288698199695299068.jpg" />
     <Image Include="assets\sponza\textures\9916269861720640319.jpg" />
     <Image Include="assets\sponza\textures\white.png" />
-    <Image Include="assets\strawberry\Texture\Strawberry_basecolor.jpg" />
-    <Image Include="assets\strawberry\Texture\Strawberry_Normal.jpg" />
-    <Image Include="assets\strawberry\Texture\Strawberry_Roughness.jpg" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="dx12\shaders\Common.hlsl">

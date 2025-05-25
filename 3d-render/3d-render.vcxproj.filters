@@ -11,9 +11,6 @@
     <Filter Include="Resourse Files\Assets">
       <UniqueIdentifier>{946c0c7c-dea3-40e7-b748-93ad7f4f3e31}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resourse Files\Assets\Duck">
-      <UniqueIdentifier>{5cc5b148-c822-4c60-b94c-9484027b1739}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resourse Files\Assets\Sponza">
       <UniqueIdentifier>{31e2ac43-1cd0-4732-9ff1-54f0a243cc4f}</UniqueIdentifier>
     </Filter>
@@ -56,14 +53,17 @@
     <Filter Include="Resourse Files\Assets\Fox">
       <UniqueIdentifier>{698a13cc-6403-4632-b3b3-60a42611396c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resourse Files\Assets\Strawberry">
-      <UniqueIdentifier>{cd2ffe66-035c-4793-b8d7-c9efe95140d6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Dx12\Shaders">
       <UniqueIdentifier>{16da4d79-dce8-4f1b-bbf7-b20fec9f66a9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Dx12\Header Files\ShaderBytecode">
       <UniqueIdentifier>{e7f93fed-eff5-41e2-990f-e1c8d83cc669}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resourse Files\Assets\Marci">
+      <UniqueIdentifier>{0f8ad121-9556-4f72-aff9-889bbf0c59be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resourse Files\Assets\Marci\Textures">
+      <UniqueIdentifier>{13f2cc45-2c10-4a8e-97e7-e1fe88a38a32}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -103,16 +103,13 @@
     <ClInclude Include="shared\FrameTimeLogger.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="shared\Model.h">
-      <Filter>Shared\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="shared\ModelLoader.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="shared\SamplerType.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="shared\SceneModel.h">
+    <ClInclude Include="shared\Model.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="shared\Texture.h">
@@ -124,32 +121,14 @@
     <ClInclude Include="shared\Utils.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dx12\Dx12GlobalContext.h">
-      <Filter>Dx12\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dx12\Dx12Model.h">
-      <Filter>Dx12\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="shared\Vertex.h">
       <Filter>Shared\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dx12\Dx12PlacementHeap.h">
-      <Filter>Dx12\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="shared\GlobalContext.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dx12\Dx12UploadBuffer.h">
-      <Filter>Dx12\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dx12\Dx12DescriptorHeap.h">
-      <Filter>Dx12\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dx12\Dx12SceneModel.h">
-      <Filter>Dx12\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dx12\Dx12ShaderBytecode.h">
-      <Filter>Dx12\Header Files</Filter>
+    <ClInclude Include="shared\Mesh.h">
+      <Filter>Shared\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -183,13 +162,10 @@
     <ClCompile Include="shared\FrameTimeLogger.cpp">
       <Filter>Shared\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="shared\Model.cpp">
-      <Filter>Shared\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="shared\ModelLoader.cpp">
       <Filter>Shared\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="shared\SceneModel.cpp">
+    <ClCompile Include="shared\Model.cpp">
       <Filter>Shared\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="shared\Texture.cpp">
@@ -198,32 +174,11 @@
     <ClCompile Include="shared\Utils.cpp">
       <Filter>Shared\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dx12\Dx12GlobalContext.cpp">
-      <Filter>Dx12\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dx12\Dx12Model.cpp">
-      <Filter>Dx12\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dx12\Dx12PlacementHeap.cpp">
-      <Filter>Dx12\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="shared\GlobalContext.cpp">
       <Filter>Shared\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dx12\Dx12SceneModel.cpp">
-      <Filter>Dx12\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dx12\Dx12ShaderBytecode.cpp">
-      <Filter>Dx12\Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\duck\Duck.gltf">
-      <Filter>Resourse Files\Assets\Duck</Filter>
-    </None>
-    <None Include="assets\duck\Duck0.bin">
-      <Filter>Resourse Files\Assets\Duck</Filter>
-    </None>
     <None Include="assets\sponza\Sponza.bin">
       <Filter>Resourse Files\Assets\Sponza</Filter>
     </None>
@@ -236,20 +191,20 @@
     <None Include="assets\fox\Fox.gltf">
       <Filter>Resourse Files\Assets\Fox</Filter>
     </None>
-    <None Include="assets\strawberry\Strawberry_gltf.gltf">
-      <Filter>Resourse Files\Assets\Strawberry</Filter>
-    </None>
     <None Include="PsMain.cso">
       <Filter>Dx12\Header Files\ShaderBytecode</Filter>
     </None>
     <None Include="VsMain.cso">
       <Filter>Dx12\Header Files\ShaderBytecode</Filter>
     </None>
+    <None Include="assets\marci\scene.bin">
+      <Filter>Resourse Files\Assets\Marci</Filter>
+    </None>
+    <None Include="assets\marci\scene.gltf">
+      <Filter>Resourse Files\Assets\Marci</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assets\duck\textures\DuckCM.png">
-      <Filter>Resourse Files\Assets\Duck</Filter>
-    </Image>
     <Image Include="assets\sponza\textures\332936164838540657.jpg">
       <Filter>Resourse Files\Assets\Sponza</Filter>
     </Image>
@@ -460,14 +415,41 @@
     <Image Include="assets\fox\Texture.png">
       <Filter>Resourse Files\Assets\Fox</Filter>
     </Image>
-    <Image Include="assets\strawberry\Texture\Strawberry_basecolor.jpg">
-      <Filter>Resourse Files\Assets\Strawberry</Filter>
+    <Image Include="assets\marci\textures\bagpack_baseColor.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
     </Image>
-    <Image Include="assets\strawberry\Texture\Strawberry_Normal.jpg">
-      <Filter>Resourse Files\Assets\Strawberry</Filter>
+    <Image Include="assets\marci\textures\bagpack_normal.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
     </Image>
-    <Image Include="assets\strawberry\Texture\Strawberry_Roughness.jpg">
-      <Filter>Resourse Files\Assets\Strawberry</Filter>
+    <Image Include="assets\marci\textures\cape_baseColor.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
+    </Image>
+    <Image Include="assets\marci\textures\cape_normal.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
+    </Image>
+    <Image Include="assets\marci\textures\clothes_baseColor.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
+    </Image>
+    <Image Include="assets\marci\textures\clothes_normal.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
+    </Image>
+    <Image Include="assets\marci\textures\hair_baseColor.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
+    </Image>
+    <Image Include="assets\marci\textures\hair_normal.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
+    </Image>
+    <Image Include="assets\marci\textures\head_baseColor.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
+    </Image>
+    <Image Include="assets\marci\textures\head_normal.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
+    </Image>
+    <Image Include="assets\marci\textures\torso_baseColor.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
+    </Image>
+    <Image Include="assets\marci\textures\torso_normal.png">
+      <Filter>Resourse Files\Assets\Marci\Textures</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>

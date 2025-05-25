@@ -85,7 +85,7 @@ Texture Texture::LoadFromFile(const std::string& path)
 
 	if (!data)
 	{
-		AssertMsg("Failed to load texture");
+		return Texture::generateCheckerboardTexture(64, 64, 8, Colors::Black, Colors::Purple);
 	}
 
 	Texture result(static_cast<u32>(x), static_cast<u32>(y));

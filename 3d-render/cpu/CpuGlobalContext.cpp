@@ -3,7 +3,7 @@
 CpuGlobalContext::CpuGlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height) : GlobalContext(hInstance, windowTitle, width, height)
 {
 	samplerType = SamplerType::BilinearFiltration;
-	borderColor = Utils::u32ColorToV3Rgb(Colors::Green);
+	borderColor = Utils::u32ColorToV3Rgb(Colors::Black);
 	frameBufferPixels = std::make_unique<u32[]>(frameBufferWidth * frameBufferHeight);
 	zBuffer = std::make_unique<f32[]>(frameBufferWidth * frameBufferHeight);
 }
@@ -21,15 +21,13 @@ void CpuGlobalContext::Run()
 	const f32 speed = 0.75f;
 	f32 currentTime = -2.0f * Constants::PI;
 
-	Model strawberry = ModelLoader::LoadModelFromFile("./assets/strawberry/Strawberry_gltf.gltf", "./assets/strawberry/Texture/Strawberry_basecolor.jpg");
-	SceneModel scene = ModelLoader::LoadSceneModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
-
+	Model fox = ModelLoader::LoadModelFromFile("./assets/fox/Fox.gltf", "./assets/fox");
+	Model sponza = ModelLoader::LoadModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
+	Model cube = Model::CreateCube();
+	
 	std::vector<Model> models;
-
-	for (const auto& mesh : scene.meshes)
-	{
-		models.push_back(mesh);
-	}
+	
+	models.push_back(sponza);
 
 	while (isRunning)
 	{
@@ -50,7 +48,7 @@ void CpuGlobalContext::Run()
 
 		M4 transform = M4::Perspective(aspectRatio, 1.57f, 0.01f, 4000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 10) * M4::Rotation(0, 0, 0) * M4::Scale(1.0f, 1.0f, 1.0f);
 
-		for (const auto& model : models)
+		for(const auto& model : models)
 		{
 			RenderModel(model, transform);
 		}
@@ -98,25 +96,37 @@ void CpuGlobalContext::RenderFrame() const
 	));
 }
 
-void CpuGlobalContext::RenderModel(const Model& model, const M4& modelTransform) const
+void CpuGlobalContext::RenderModel(const Model& scene, const M4& modelTransform) const
 {
-	V4* TransformedVertices = new V4[model.vertices.size()];
-	for (u32 VertexId = 0; VertexId < model.vertices.size(); ++VertexId)
+	for (const auto& mesh : scene.meshes)
 	{
-		TransformedVertices[VertexId] = (modelTransform * V4(model.vertices[VertexId].position, 1.0f));
+		const Vertex* vertexData = scene.vertices.data() + mesh.VertexOffset;
+		const u32* indexData = scene.indices.data() + mesh.IndexOffset;
+		const Texture& texture = scene.textures[mesh.TextureId];
+
+		std::vector<V4> transformedVertices(mesh.VertexCount);
+		for (u32 i = 0; i < mesh.VertexCount; ++i)
+		{
+			transformedVertices[i] = modelTransform * V4(vertexData[i].position, 1.0f);
+		}
+
+		for (u32 i = 0; i < mesh.IndexCount; i += 3)
+		{
+			u32 i0 = indexData[i + 0];
+			u32 i1 = indexData[i + 1];
+			u32 i2 = indexData[i + 2];
+
+			const V4& v0 = transformedVertices[i0];
+			const V4& v1 = transformedVertices[i1];
+			const V4& v2 = transformedVertices[i2];
+
+			const V2f& uv0 = vertexData[i0].uv;
+			const V2f& uv1 = vertexData[i1].uv;
+			const V2f& uv2 = vertexData[i2].uv;
+
+			DrawTriangle(v0, v1, v2, uv0, uv1, uv2, texture);
+		}
 	}
-
-	for (size_t i = 0; i < model.indices.size(); i += 3)
-	{
-		u32 Index0 = model.indices[i + 0];
-		u32 Index1 = model.indices[i + 1];
-		u32 Index2 = model.indices[i + 2];
-
-		DrawTriangle(TransformedVertices[Index0], TransformedVertices[Index1], TransformedVertices[Index2],
-			model.vertices[Index0].uv, model.vertices[Index1].uv, model.vertices[Index2].uv, *model.texture);
-	}
-
-	delete[] TransformedVertices;
 }
 
 void CpuGlobalContext::DrawTriangle(const V4& ModelVertex0, const V4& ModelVertex1, const V4& ModelVertex2, const V2f& ModelUv0, const V2f& ModelUv1, const V2f& ModelUv2, const Texture& Texture) const
