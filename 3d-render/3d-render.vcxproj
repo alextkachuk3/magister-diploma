@@ -155,6 +155,7 @@
     <ClInclude Include="shared\math\V4.h" />
     <ClInclude Include="shared\Mesh.h" />
     <ClInclude Include="shared\ModelLoader.h" />
+    <ClInclude Include="shared\RGBA8.h" />
     <ClInclude Include="shared\SamplerType.h" />
     <ClInclude Include="shared\Model.h" />
     <ClInclude Include="shared\Texture.h" />

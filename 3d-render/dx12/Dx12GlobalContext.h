@@ -8,6 +8,7 @@
 #include <Dx12Model.h>
 #include <Dx12DescriptorHeap.h>
 #include "Dx12ShaderBytecode.h"
+#include "RGBA8.h"
 
 class Dx12GlobalContext : public GlobalContext
 {

@@ -5,10 +5,10 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 	IDXGIFactory2* factory = nullptr;
 	ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)));
 
-	ID3D12Debug1* debug;
-	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)));
-	debug->EnableDebugLayer();
-	debug->SetEnableGPUBasedValidation(true);
+	//ID3D12Debug1* debug;
+	//ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)));
+	//debug->EnableDebugLayer();
+	//debug->SetEnableGPUBasedValidation(true);
 
 	for (u32 AdapterIndex = 0; factory->EnumAdapters1(AdapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND; ++AdapterIndex)
 	{
@@ -96,73 +96,69 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 
 void Dx12GlobalContext::CreateRootSignatureAndPipelineState(Dx12ShaderBytecode& vertexShader, Dx12ShaderBytecode& pixelShader)
 {
+
+	D3D12_ROOT_PARAMETER rootParameters[2] = {};
+
+	D3D12_DESCRIPTOR_RANGE table1Range[1] = {};
 	{
-		D3D12_ROOT_PARAMETER RootParameters[2] = {};
+		table1Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		table1Range[0].NumDescriptors = 1;
+		table1Range[0].BaseShaderRegister = 0;
+		table1Range[0].RegisterSpace = 0;
+		table1Range[0].OffsetInDescriptorsFromTableStart = 0;
 
-		D3D12_DESCRIPTOR_RANGE Table1Range[1] = {};
-		{
-			Table1Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-			Table1Range[0].NumDescriptors = 1;
-			Table1Range[0].BaseShaderRegister = 0;
-			Table1Range[0].RegisterSpace = 0;
-			Table1Range[0].OffsetInDescriptorsFromTableStart = 0;
+		rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		rootParameters[0].DescriptorTable.NumDescriptorRanges = ArraySize(table1Range);
+		rootParameters[0].DescriptorTable.pDescriptorRanges = table1Range;
+		rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	}
 
-			RootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			RootParameters[0].DescriptorTable.NumDescriptorRanges = ArraySize(Table1Range);
-			RootParameters[0].DescriptorTable.pDescriptorRanges = Table1Range;
-			RootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-		}
+	D3D12_DESCRIPTOR_RANGE table2Range[1] = {};
+	{
+		table2Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+		table2Range[0].NumDescriptors = 1;
+		table2Range[0].BaseShaderRegister = 0;
+		table2Range[0].RegisterSpace = 0;
+		table2Range[0].OffsetInDescriptorsFromTableStart = 0;
 
-		D3D12_DESCRIPTOR_RANGE Table2Range[1] = {};
-		{
-			Table2Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-			Table2Range[0].NumDescriptors = 1;
-			Table2Range[0].BaseShaderRegister = 0;
-			Table2Range[0].RegisterSpace = 0;
-			Table2Range[0].OffsetInDescriptorsFromTableStart = 0;
+		rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		rootParameters[1].DescriptorTable.NumDescriptorRanges = ArraySize(table2Range);
+		rootParameters[1].DescriptorTable.pDescriptorRanges = table2Range;
+		rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	}
 
-			RootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			RootParameters[1].DescriptorTable.NumDescriptorRanges = ArraySize(Table2Range);
-			RootParameters[1].DescriptorTable.pDescriptorRanges = Table2Range;
-			RootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-		}
+	D3D12_STATIC_SAMPLER_DESC staticSamplerDesc = {};
+	staticSamplerDesc.Filter = D3D12_FILTER_ANISOTROPIC;
+	staticSamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	staticSamplerDesc.MaxAnisotropy = 16.0f;
+	staticSamplerDesc.MinLOD = 0;
+	staticSamplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+	staticSamplerDesc.ShaderRegister = 0;
+	staticSamplerDesc.RegisterSpace = 0;
+	staticSamplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-		D3D12_STATIC_SAMPLER_DESC StaticSamplerDesc = {};
-		StaticSamplerDesc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-		StaticSamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		StaticSamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		StaticSamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		StaticSamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-		StaticSamplerDesc.ShaderRegister = 0;
-		StaticSamplerDesc.RegisterSpace = 0;
-		StaticSamplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	D3D12_ROOT_SIGNATURE_DESC signatureDesc = {};
+	signatureDesc.NumParameters = ArraySize(rootParameters);
+	signatureDesc.pParameters = rootParameters;
+	signatureDesc.NumStaticSamplers = 1;
+	signatureDesc.pStaticSamplers = &staticSamplerDesc;
+	signatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-		D3D12_ROOT_SIGNATURE_DESC SignatureDesc = {};
-		SignatureDesc.NumParameters = ArraySize(RootParameters);
-		SignatureDesc.pParameters = RootParameters;
-		SignatureDesc.NumStaticSamplers = 1;
-		SignatureDesc.pStaticSamplers = &StaticSamplerDesc;
-		SignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	ID3DBlob* serializedRootSig = 0;
+	ID3DBlob* errorBlob = 0;
+	ThrowIfFailed(D3D12SerializeRootSignature(&signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &serializedRootSig, &errorBlob));
+	ThrowIfFailed(device->CreateRootSignature(0, serializedRootSig->GetBufferPointer(), serializedRootSig->GetBufferSize(), IID_PPV_ARGS(&modelRootSignature)));
 
-		ID3DBlob* SerializedRootSig = 0;
-		ID3DBlob* ErrorBlob = 0;
-		ThrowIfFailed(D3D12SerializeRootSignature(&SignatureDesc,
-			D3D_ROOT_SIGNATURE_VERSION_1_0,
-			&SerializedRootSig,
-			&ErrorBlob));
-		ThrowIfFailed(device->CreateRootSignature(0,
-			SerializedRootSig->GetBufferPointer(),
-			SerializedRootSig->GetBufferSize(),
-			IID_PPV_ARGS(&modelRootSignature)));
-
-		if (SerializedRootSig)
-		{
-			SerializedRootSig->Release();
-		}
-		if (ErrorBlob)
-		{
-			ErrorBlob->Release();
-		}
+	if (serializedRootSig)
+	{
+		serializedRootSig->Release();
+	}
+	if (errorBlob)
+	{
+		errorBlob->Release();
 	}
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
@@ -434,40 +430,92 @@ ID3D12Resource* Dx12GlobalContext::CreateTextureAsset(D3D12_RESOURCE_DESC* desc,
 ID3D12Resource* Dx12GlobalContext::CreateTextureAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels)
 {
 	D3D12_RESOURCE_ALLOCATION_INFO allocationInfo = device->GetResourceAllocationInfo(0, 1, desc);
+
+	u64 uploadSize = 0;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT mipFootPrints[Constants::MAX_MIP_LEVELS] = {};
+	device->GetCopyableFootprints(desc, 0, desc->MipLevels, 0, mipFootPrints, 0, 0, &uploadSize);
+
+	u64 uploadOffset = 0;
+	u8* uploadTexels = UploadArenaPushSize(&uploadBuffer, uploadSize, &uploadOffset);
+
 	u64 bytesPerPixel = Utils::Dx12GetBytesPerPixel(desc->Format);
-	D3D12_PLACED_SUBRESOURCE_FOOTPRINT PlacedFootPrint = {};
 
-	Assert(desc->DepthOrArraySize == 1);
-	D3D12_SUBRESOURCE_FOOTPRINT footPrint = {};
-	footPrint.Format = desc->Format;
-	footPrint.Width = desc->Width;
-	footPrint.Height = desc->Height;
-	footPrint.Depth = 1;
-	footPrint.RowPitch = Utils::Align(footPrint.Width * bytesPerPixel, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-	PlacedFootPrint.Footprint = footPrint;
+	RGBA8* mipMemory = desc->MipLevels > 1 ? (RGBA8*)malloc(uploadSize) : 0;
 
-	u8* DestTexels = UploadArenaPushSize(&uploadBuffer, footPrint.Height * footPrint.RowPitch, &PlacedFootPrint.Offset);
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT* currFootPrint = mipFootPrints + 0;
 
-	for (u32 Y = 0; Y < desc->Height; ++Y)
+	currFootPrint->Offset += uploadOffset;
+	for (u32 y = 0; y < desc->Height; ++y)
 	{
-		u8* src = (u8*)texels + (Y * desc->Width) * bytesPerPixel;
-		u8* dest = DestTexels + (Y * footPrint.RowPitch);
-		memcpy(dest, src, bytesPerPixel * desc->Width);
+		u8* src = (u8*)texels + (y * currFootPrint->Footprint.Width) * bytesPerPixel;
+		u8* dest = uploadTexels + (y * currFootPrint->Footprint.RowPitch);
+		memcpy(dest, src, bytesPerPixel * currFootPrint->Footprint.Width);
+	}
+
+	RGBA8* srcMipStart = mipMemory - mipFootPrints[0].Footprint.Width * mipFootPrints[0].Footprint.Height;
+	RGBA8* dstMipStart = mipMemory;
+	for (u32 mipId = 1; mipId < desc->MipLevels; ++mipId)
+	{
+		Assert(desc->Format == DXGI_FORMAT_R8G8B8A8_UNORM);
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT* prevFootPrint = mipFootPrints + mipId - 1;
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT* currFootPrint = mipFootPrints + mipId;
+
+		RGBA8* srcTexelBase = mipId == 1 ? (RGBA8*)texels : srcMipStart;
+		for (u32 Y = 0; Y < currFootPrint->Footprint.Height; ++Y)
+		{
+			for (u32 X = 0; X < currFootPrint->Footprint.Width; ++X)
+			{
+				RGBA8* dstTexel = dstMipStart + Y * currFootPrint->Footprint.Width + X;
+
+				RGBA8* srcTexel00 = srcTexelBase + (2 * Y + 0) * prevFootPrint->Footprint.Width + 2 * X + 0;
+				RGBA8* srcTexel01 = srcTexelBase + (2 * Y + 0) * prevFootPrint->Footprint.Width + 2 * X + 1;
+				RGBA8* srcTexel10 = srcTexelBase + (2 * Y + 1) * prevFootPrint->Footprint.Width + 2 * X + 0;
+				RGBA8* srcTexel11 = srcTexelBase + (2 * Y + 1) * prevFootPrint->Footprint.Width + 2 * X + 1;
+
+				dstTexel->Red = u8(round(f32(srcTexel00->Red + srcTexel01->Red + srcTexel10->Red + srcTexel11->Red) / 4.0f));
+				dstTexel->Green = u8(round(f32(srcTexel00->Green + srcTexel01->Green + srcTexel10->Green + srcTexel11->Green) / 4.0f));
+				dstTexel->Blue = u8(round(f32(srcTexel00->Blue + srcTexel01->Blue + srcTexel10->Blue + srcTexel11->Blue) / 4.0f));
+				dstTexel->Alpha = u8(round(f32(srcTexel00->Alpha + srcTexel01->Alpha + srcTexel10->Alpha + srcTexel11->Alpha) / 4.0f));
+			}
+		}
+
+		RGBA8* srcRowY = dstMipStart;
+		u8* dstRowY = uploadTexels + currFootPrint->Offset;
+		currFootPrint->Offset += uploadOffset;
+
+		for (u32 Y = 0; Y < currFootPrint->Footprint.Height; ++Y)
+		{
+			memcpy(dstRowY, srcRowY, bytesPerPixel * currFootPrint->Footprint.Width);
+
+			dstRowY += currFootPrint->Footprint.RowPitch;
+			srcRowY += currFootPrint->Footprint.Width;
+		}
+
+		srcMipStart += prevFootPrint->Footprint.Width * prevFootPrint->Footprint.Height;
+		dstMipStart += currFootPrint->Footprint.Width * currFootPrint->Footprint.Height;
+	}
+
+	if (mipMemory)
+	{
+		free(mipMemory);
 	}
 
 	ID3D12Resource* result = CreateResource(&texturePlacement, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);
 
-	D3D12_TEXTURE_COPY_LOCATION sourceRegion = {};
-	sourceRegion.pResource = uploadBuffer.gpuBuffer;
-	sourceRegion.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-	sourceRegion.PlacedFootprint = PlacedFootPrint;
+	for (u32 mipId = 0; mipId < desc->MipLevels; ++mipId)
+	{
+		D3D12_TEXTURE_COPY_LOCATION sourceRegion = {};
+		sourceRegion.pResource = uploadBuffer.gpuBuffer;
+		sourceRegion.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+		sourceRegion.PlacedFootprint = mipFootPrints[mipId];
 
-	D3D12_TEXTURE_COPY_LOCATION destinationRegion = {};
-	destinationRegion.pResource = result;
-	destinationRegion.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-	destinationRegion.SubresourceIndex = 0;
+		D3D12_TEXTURE_COPY_LOCATION destinationRegion = {};
+		destinationRegion.pResource = result;
+		destinationRegion.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+		destinationRegion.SubresourceIndex = mipId;
 
-	commandList->CopyTextureRegion(&destinationRegion, 0, 0, 0, &sourceRegion, nullptr);
+		commandList->CopyTextureRegion(&destinationRegion, 0, 0, 0, &sourceRegion, nullptr);
+	}
 
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -510,7 +558,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE Dx12GlobalContext::TextureDescriptorAllocate(ID3D12R
 	desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	desc.Shader4ComponentMapping = D3D12_ENCODE_SHADER_4_COMPONENT_MAPPING(0, 1, 2, 3);
 	desc.Texture2D.MostDetailedMip = 0;
-	desc.Texture2D.MipLevels = 1;
+	desc.Texture2D.MipLevels = gpuTexture->GetDesc().MipLevels;
 	desc.Texture2D.PlaneSlice = 0;
 
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuDescriptor = {};

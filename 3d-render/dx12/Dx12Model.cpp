@@ -14,9 +14,9 @@ Dx12Model::Dx12Model(const Model& model)
 
 	for (const Texture& texture : model.textures)
 	{
-		ID3D12Resource* tex = CreateTexture(texture);
-		gpuTextures.push_back(tex);
-		gpuTextureDescriptors.push_back(Dx12GlobalContext::TextureDescriptorAllocate(tex));
+		ID3D12Resource* textureResourse = CreateTexture(texture);
+		gpuTextures.push_back(textureResourse);
+		gpuTextureDescriptors.push_back(Dx12GlobalContext::TextureDescriptorAllocate(textureResourse));
 	}
 }
 
@@ -31,9 +31,9 @@ Dx12Model::Dx12Model(Model&& model)
 
 	for (Texture& texture : model.textures)
 	{
-		ID3D12Resource* tex = CreateTexture(texture);
-		gpuTextures.push_back(tex);
-		gpuTextureDescriptors.push_back(Dx12GlobalContext::TextureDescriptorAllocate(tex));
+		ID3D12Resource* textureResourse = CreateTexture(texture);
+		gpuTextures.push_back(textureResourse);
+		gpuTextureDescriptors.push_back(Dx12GlobalContext::TextureDescriptorAllocate(textureResourse));
 	}
 	model.vertices.clear();
 	model.indices.clear();
@@ -86,7 +86,7 @@ ID3D12Resource* Dx12Model::CreateTexture(const Texture& texture)
 	desc.Width = texture.getWidth();
 	desc.Height = texture.getHeight();
 	desc.DepthOrArraySize = 1;
-	desc.MipLevels = 1;
+	desc.MipLevels = static_cast<UINT16>(ceil(log2(max(desc.Width, desc.Height)))) + 1;
 	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	desc.SampleDesc.Count = 1;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;

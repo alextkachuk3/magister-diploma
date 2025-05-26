@@ -148,6 +148,9 @@
     <ClInclude Include="dx12\Dx12UploadBuffer.h">
       <Filter>Dx12\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="shared\RGBA8.h">
+      <Filter>Shared\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
