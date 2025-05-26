@@ -3,8 +3,9 @@
 #include <Windows.h>
 #include <stdexcept>
 #include <algorithm>
-#include "V3.h"
 #include <dxgiformat.h>
+#include "V3.h"
+#include "Constants.h"
 
 #define Assert(Expression) if (!(Expression)) {__debugbreak();}
 #define AssertMsg(Msg) { OutputDebugStringA(Msg); Assert(false);}
@@ -24,4 +25,9 @@ namespace Utils
 	V3 Lerp(const V3& A, const V3& B, f32 t);
 	u64 Align(const u64 location, const u64 alignment);
 	u32 Dx12GetBytesPerPixel(DXGI_FORMAT format);
+
+	constexpr float DegreesToRadians(float degrees)
+	{
+		return degrees * Constants::PI / 180.0f;
+	}
 }

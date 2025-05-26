@@ -1,5 +1,5 @@
 ﻿#include "CpuGlobalContext.h"
-//#include "Dx12GlobalContext.h"
+#include "Dx12GlobalContext.h"
 #include <algorithm>
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
@@ -14,7 +14,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	}
 	else
 	{
-		//globalContext = std::make_unique<Dx12GlobalContext>(hInstance, "Render DX12", 1920, 1080);
+		globalContext = std::make_unique<Dx12GlobalContext>(hInstance, "Render DX12", 1920, 1080);
 	}
 
 	globalContext->Run();

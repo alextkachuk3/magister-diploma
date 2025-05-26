@@ -130,6 +130,24 @@
     <ClInclude Include="shared\Mesh.h">
       <Filter>Shared\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dx12\Dx12DescriptorHeap.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12GlobalContext.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12Model.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12PlacementHeap.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12ShaderBytecode.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Dx12UploadBuffer.h">
+      <Filter>Dx12\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -176,6 +194,18 @@
     </ClCompile>
     <ClCompile Include="shared\GlobalContext.cpp">
       <Filter>Shared\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Dx12GlobalContext.cpp">
+      <Filter>Dx12\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Dx12Model.cpp">
+      <Filter>Dx12\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Dx12PlacementHeap.cpp">
+      <Filter>Dx12\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Dx12ShaderBytecode.cpp">
+      <Filter>Dx12\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

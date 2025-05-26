@@ -1,5 +1,4 @@
 #include "Dx12GlobalContext.h"
-#include <Dx12SceneModel.h>
 
 Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height) : GlobalContext(hInstance, windowTitle, width, height)
 {
@@ -39,7 +38,7 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.BufferCount = 2;
 	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
 	ThrowIfFailed(factory->CreateSwapChainForHwnd(commandQueue, windowHandle, &swapChainDesc, nullptr, nullptr, &swapChain));
 
@@ -252,17 +251,14 @@ void Dx12GlobalContext::Run()
 	QueryPerformanceCounter(&beginTime);
 
 	Model fox = ModelLoader::LoadModelFromFile("./assets/fox/Fox.gltf", "./assets/fox/Texture.png");
-	SceneModel scene = ModelLoader::LoadSceneModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
-
-	Dx12Model dx12fox = std::move(fox);
-	Dx12SceneModel dx12Scene = std::move(scene);
+	Model sponza = ModelLoader::LoadModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
+	Model marci = ModelLoader::LoadModelFromFile("./assets/marci/scene.gltf", "./assets/marci/");
 
 	std::vector<Dx12Model> models;
 
-	for (const Dx12Model& model : dx12Scene.meshes)
-	{
-		models.push_back(model);
-	}
+	//models.push_back(std::move(fox));
+	models.push_back(std::move(sponza));
+	//models.push_back(std::move(marci));
 
 	ThrowIfFailed(commandList->Close());
 	commandQueue->ExecuteCommandLists(1, (ID3D12CommandList**)&commandList);
@@ -289,7 +285,7 @@ void Dx12GlobalContext::Run()
 		commandList->ClearRenderTargetView(frameBufferDescriptors[currentFrameIndex], color, 0, nullptr);
 		commandList->ClearDepthStencilView(depthDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1, 0, 0, nullptr);
 
-		M4 transform = M4::Perspective(aspectRatio, 1.57f, 0.01f, 4000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0, 0, 10) * M4::Rotation(0, 0, 0) * M4::Scale(1.0f, 1.0f, 1.0f);
+		M4 transform = M4::Perspective(aspectRatio, Utils::DegreesToRadians(90.0f), 0.01f, 2000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0.0f, 0.0f, 10.0f) * M4::Rotation(0.0f, 0.0f, 0.0f) * M4::Scale(0.1f, 0.1f, 0.1f);
 
 		CopyDataToBuffer(D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &transform, sizeof(M4), transformBuffer);
 
@@ -317,30 +313,35 @@ void Dx12GlobalContext::Run()
 		commandList->SetDescriptorHeaps(1, &shaderDescriptorHeap.heap);
 		commandList->SetGraphicsRootDescriptorTable(1, transformDescriptor);
 
-		for (const Dx12Model& model : models)
+		for (Dx12Model& model : models)
 		{
-			D3D12_INDEX_BUFFER_VIEW indexView = {};
-			indexView.BufferLocation = model.gpuIndexBuffer->GetGPUVirtualAddress();
-			indexView.SizeInBytes = sizeof(u32) * model.GetIndexCount();
-			indexView.Format = DXGI_FORMAT_R32_UINT;
-			commandList->IASetIndexBuffer(&indexView);
+			D3D12_VERTEX_BUFFER_VIEW vbv = {};
+			vbv.BufferLocation = model.GetVertexBuffer()->GetGPUVirtualAddress();
+			vbv.SizeInBytes = sizeof(Vertex) * model.GetVertexCount();
+			vbv.StrideInBytes = sizeof(Vertex);
+			commandList->IASetVertexBuffers(0, 1, &vbv);
 
-			D3D12_VERTEX_BUFFER_VIEW vertexView = {};
-			vertexView.BufferLocation = model.gpuVertexBuffer->GetGPUVirtualAddress();
-			vertexView.SizeInBytes = sizeof(Vertex) * model.GetVertexCount();
-			vertexView.StrideInBytes = sizeof(Vertex);
-			commandList->IASetVertexBuffers(0, 1, &vertexView);
+			D3D12_INDEX_BUFFER_VIEW ibv = {};
+			ibv.BufferLocation = model.GetIndexBuffer()->GetGPUVirtualAddress();
+			ibv.SizeInBytes = sizeof(u32) * model.GetIndexCount();
+			ibv.Format = DXGI_FORMAT_R32_UINT;
+			commandList->IASetIndexBuffer(&ibv);
 
-			commandList->SetGraphicsRootDescriptorTable(0, model.gpuDescriptor);
+			const auto& meshes = model.GetMeshes();
+			const auto& textureDescriptors = model.GetTextureDescriptors();
 
-			commandList->DrawIndexedInstanced(model.GetIndexCount(), 1, 0, 0, 0);
+			for (const Mesh& m : meshes)
+			{
+				commandList->SetGraphicsRootDescriptorTable(0, textureDescriptors[m.TextureId]);
+				commandList->DrawIndexedInstanced(m.IndexCount, 1, m.IndexOffset, m.VertexOffset, 0);
+			}
 		}
 
 		TransitionResource(frameBuffers[currentFrameIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
 		ThrowIfFailed(commandList->Close());
 		commandQueue->ExecuteCommandLists(1, (ID3D12CommandList**)&commandList);
-		swapChain->Present(1, 0);
+		swapChain->Present(enableVSync ? 1 : 0, 0);
 
 		WaitForGpu();
 
@@ -398,12 +399,12 @@ ID3D12Resource* Dx12GlobalContext::CreateResource(Dx12PlacementHeap* placementHe
 	return result;
 }
 
-ID3D12Resource* Dx12GlobalContext::CreateBufferAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData)
+ID3D12Resource* Dx12GlobalContext::CreateBufferAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, const void* bufferData)
 {
 	return activeInstance ? static_cast<Dx12GlobalContext*>(activeInstance)->CreateBufferAssetInternal(desc, initialState, bufferData) : nullptr;
 }
 
-ID3D12Resource* Dx12GlobalContext::CreateBufferAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData)
+ID3D12Resource* Dx12GlobalContext::CreateBufferAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, const void* bufferData)
 {
 	u64 uploadOffset = 0;
 	{

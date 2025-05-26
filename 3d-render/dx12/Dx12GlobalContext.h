@@ -12,13 +12,11 @@
 class Dx12GlobalContext : public GlobalContext
 {
 public:
-	Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height);
-
-	
+	Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height);	
 
 	void Run() override;
 
-	static ID3D12Resource* CreateBufferAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData);
+	static ID3D12Resource* CreateBufferAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, const void* bufferData);
 	static ID3D12Resource* CreateTextureAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels);
 	static D3D12_GPU_DESCRIPTOR_HANDLE TextureDescriptorAllocate(ID3D12Resource* gpuTexture);
 
@@ -56,6 +54,8 @@ private:
 	ID3D12RootSignature* modelRootSignature;
 	ID3D12PipelineState* modelPipeline;
 
+	bool enableVSync = false;
+
 	void CreateRootSignatureAndPipelineState(Dx12ShaderBytecode& vertexShader, Dx12ShaderBytecode& pixelShader);
 	void CreateTransformBuffer();
 
@@ -63,7 +63,7 @@ private:
 	void TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 
 	ID3D12Resource* CreateResource(Dx12PlacementHeap* placementHeap, D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, D3D12_CLEAR_VALUE* clearValues);
-	ID3D12Resource* CreateBufferAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* bufferData);
+	ID3D12Resource* CreateBufferAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, const void* bufferData);
 	ID3D12Resource* CreateTextureAssetInternal(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels);
 	Dx12DescriptorHeap DescriptorHeapCreate(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 	void DescriptorAllocate(Dx12DescriptorHeap* heap, D3D12_CPU_DESCRIPTOR_HANDLE* outCpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE* outGpuHandle);
