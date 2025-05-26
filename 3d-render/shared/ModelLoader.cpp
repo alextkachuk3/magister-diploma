@@ -27,16 +27,30 @@ Model ModelLoader::LoadModelFromFile(const std::string& modelPath, const std::st
         AssertMsg("Failed to load scene");
     }
 
-    Model sceneModel;
+    Model model;
+
+    size_t estimatedVertexCount = 0;
+    size_t estimatedIndexCount = 0;
+    for (u32 i = 0; i < scene->mNumMeshes; ++i)
+    {
+        estimatedVertexCount += scene->mMeshes[i]->mNumVertices;
+        estimatedIndexCount += scene->mMeshes[i]->mNumFaces * 3;
+    }
+    model.vertices.reserve(estimatedVertexCount);
+    model.indices.reserve(estimatedIndexCount);
+    model.meshes.reserve(scene->mNumMeshes);
+    model.meshTextureIds.reserve(scene->mNumMeshes);
+
+    std::unordered_map<std::string, u32> textureCache;
 
     for (u32 meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
     {
         aiMesh* aiMeshPtr = scene->mMeshes[meshIndex];
 
         Mesh outMesh{};
-        outMesh.VertexOffset = static_cast<u32>(sceneModel.vertices.size());
-        outMesh.IndexOffset = static_cast<u32>(sceneModel.indices.size());
-        outMesh.VertexCount = aiMeshPtr->mNumVertices;
+        outMesh.vertexOffset = static_cast<u32>(model.vertices.size());
+        outMesh.indexOffset = static_cast<u32>(model.indices.size());
+        outMesh.vertexCount = aiMeshPtr->mNumVertices;
 
         for (u32 i = 0; i < aiMeshPtr->mNumVertices; ++i)
         {
@@ -48,7 +62,7 @@ Model ModelLoader::LoadModelFromFile(const std::string& modelPath, const std::st
             else
                 vertex.uv = V2f(0.0f, 0.0f);
 
-            sceneModel.vertices.push_back(vertex);
+            model.vertices.push_back(vertex);
         }
 
         for (u32 i = 0; i < aiMeshPtr->mNumFaces; ++i)
@@ -56,11 +70,11 @@ Model ModelLoader::LoadModelFromFile(const std::string& modelPath, const std::st
             const aiFace& face = aiMeshPtr->mFaces[i];
             for (u32 j = 0; j < face.mNumIndices; ++j)
             {
-                sceneModel.indices.push_back(face.mIndices[j]);
+                model.indices.push_back(face.mIndices[j]);
             }
         }
 
-        outMesh.IndexCount = static_cast<u32>(sceneModel.indices.size()) - outMesh.IndexOffset;
+        outMesh.indexCount = static_cast<u32>(model.indices.size()) - outMesh.indexOffset;
 
         u32 textureId = 0;
         if (scene->HasMaterials() && aiMeshPtr->mMaterialIndex >= 0)
@@ -72,36 +86,39 @@ Model ModelLoader::LoadModelFromFile(const std::string& modelPath, const std::st
             {
                 std::string fullTexPath = textureDir + "/" + std::string(texPath.C_Str());
 
-                bool found = false;
-                for (u32 i = 0; i < sceneModel.textures.size(); ++i)
+                auto it = textureCache.find(fullTexPath);
+                if (it != textureCache.end())
                 {
-                    if (sceneModel.textures[i].getWidth() > 0 &&
-                        fullTexPath == texPath.C_Str())
-                    {
-                        textureId = i;
-                        found = true;
-                        break;
-                    }
+                    textureId = it->second;
                 }
-
-                if (!found)
+                else
                 {
-                    sceneModel.textures.push_back(Texture::LoadFromFile(fullTexPath));
-                    textureId = static_cast<u32>(sceneModel.textures.size() - 1);
+                    model.textures.push_back(Texture::LoadFromFile(fullTexPath));
+                    textureId = static_cast<u32>(model.textures.size() - 1);
+                    textureCache[fullTexPath] = textureId;
                 }
             }
             else
             {
-                sceneModel.textures.push_back(Texture::generateCheckerboardTexture(64, 64, 8, Colors::Purple, Colors::Black));
-                textureId = static_cast<u32>(sceneModel.textures.size() - 1);
+                std::string fallbackKey = "__checkerboard__";
+                auto it = textureCache.find(fallbackKey);
+                if (it != textureCache.end())
+                {
+                    textureId = it->second;
+                }
+                else
+                {
+                    model.textures.push_back(Texture::generateCheckerboardTexture(64, 64, 8, Colors::Purple, Colors::Black));
+                    textureId = static_cast<u32>(model.textures.size() - 1);
+                    textureCache[fallbackKey] = textureId;
+                }
             }
         }
 
-        outMesh.TextureId = textureId;
-        sceneModel.meshes.push_back(outMesh);
-        sceneModel.meshTextureIds.push_back({ textureId });
+        outMesh.textureId = textureId;
+        model.meshes.push_back(outMesh);
+        model.meshTextureIds.push_back({ textureId });
     }
 
-    return sceneModel;
+    return model;
 }
-

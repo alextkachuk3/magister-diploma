@@ -100,17 +100,17 @@ void CpuGlobalContext::RenderModel(const Model& scene, const M4& modelTransform)
 {
 	for (const auto& mesh : scene.meshes)
 	{
-		const Vertex* vertexData = scene.vertices.data() + mesh.VertexOffset;
-		const u32* indexData = scene.indices.data() + mesh.IndexOffset;
-		const Texture& texture = scene.textures[mesh.TextureId];
+		const Vertex* vertexData = scene.vertices.data() + mesh.vertexOffset;
+		const u32* indexData = scene.indices.data() + mesh.indexOffset;
+		const Texture& texture = scene.textures[mesh.textureId];
 
-		std::vector<V4> transformedVertices(mesh.VertexCount);
-		for (u32 i = 0; i < mesh.VertexCount; ++i)
+		std::vector<V4> transformedVertices(mesh.vertexCount);
+		for (u32 i = 0; i < mesh.vertexCount; ++i)
 		{
 			transformedVertices[i] = modelTransform * V4(vertexData[i].position, 1.0f);
 		}
 
-		for (u32 i = 0; i < mesh.IndexCount; i += 3)
+		for (u32 i = 0; i < mesh.indexCount; i += 3)
 		{
 			u32 i0 = indexData[i + 0];
 			u32 i1 = indexData[i + 1];

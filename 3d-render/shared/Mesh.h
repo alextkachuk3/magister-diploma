@@ -2,9 +2,9 @@
 
 struct Mesh
 {
-    u32 IndexOffset;
-    u32 IndexCount;
-    u32 VertexOffset;
-    u32 VertexCount;
-    u32 TextureId;
+    u32 indexOffset;
+    u32 indexCount;
+    u32 vertexOffset;
+    u32 vertexCount;
+    u32 textureId;
 };

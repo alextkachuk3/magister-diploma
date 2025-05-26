@@ -332,8 +332,8 @@ void Dx12GlobalContext::Run()
 
 			for (const Mesh& m : meshes)
 			{
-				commandList->SetGraphicsRootDescriptorTable(0, textureDescriptors[m.TextureId]);
-				commandList->DrawIndexedInstanced(m.IndexCount, 1, m.IndexOffset, m.VertexOffset, 0);
+				commandList->SetGraphicsRootDescriptorTable(0, textureDescriptors[m.textureId]);
+				commandList->DrawIndexedInstanced(m.indexCount, 1, m.indexOffset, m.vertexOffset, 0);
 			}
 		}
 

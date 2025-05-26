@@ -42,11 +42,11 @@ Model Model::CreateCube()
 	model.textures.push_back(Texture::generateCheckerboardTexture(16, 16, 2, Colors::Black, Colors::Purple));
 
 	Mesh cubeMesh;
-	cubeMesh.VertexOffset = 0;
-	cubeMesh.VertexCount = static_cast<u32>(model.vertices.size());
-	cubeMesh.IndexOffset = 0;
-	cubeMesh.IndexCount = static_cast<u32>(model.indices.size());
-	cubeMesh.TextureId = 0;
+	cubeMesh.vertexOffset = 0;
+	cubeMesh.vertexCount = static_cast<u32>(model.vertices.size());
+	cubeMesh.indexOffset = 0;
+	cubeMesh.indexCount = static_cast<u32>(model.indices.size());
+	cubeMesh.textureId = 0;
 
 	model.meshes.push_back(cubeMesh);
 	model.meshTextureIds.push_back({ 0 });
