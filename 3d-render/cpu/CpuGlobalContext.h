@@ -16,7 +16,7 @@ private:
 public:
 	CpuGlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height);
 
-	void Run() override;
+	void Run(std::vector<std::pair<std::string, std::string>> modelTexturePaths) override;
 
 	void RenderFrame() const;
 	void RenderModel(const Model& model, const M4& modelTransform) const;

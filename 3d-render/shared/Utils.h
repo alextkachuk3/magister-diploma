@@ -21,6 +21,7 @@ void ThrowIfFailed(HRESULT result);
 namespace Utils
 {
 	V3 u32ColorToV3Rgb(const u32 color);
+	u32 V3BgrToU32Color(V3 color);
 	u32 V3RgbToU32Color(V3 color);
 	V3 Lerp(const V3& A, const V3& B, f32 t);
 	u64 Align(const u64 location, const u64 alignment);

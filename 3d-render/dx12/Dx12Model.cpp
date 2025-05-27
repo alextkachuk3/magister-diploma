@@ -1,8 +1,6 @@
 #include "Dx12Model.h"
 #include "Dx12GlobalContext.h"
 
-Dx12Model::Dx12Model() {}
-
 Dx12Model::Dx12Model(const Model& model)
 {
 	vertexCount = static_cast<u32>(model.vertices.size());

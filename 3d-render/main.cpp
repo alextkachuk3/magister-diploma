@@ -17,7 +17,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		globalContext = std::make_unique<Dx12GlobalContext>(hInstance, "Render DX12", 1920, 1080);
 	}
 
-	globalContext->Run();
+	std::vector<std::pair<std::string, std::string>> modelsTexturesPaths;
+
+	modelsTexturesPaths.emplace_back("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
+
+	globalContext->Run(modelsTexturesPaths);
 
 	return 0;
 }

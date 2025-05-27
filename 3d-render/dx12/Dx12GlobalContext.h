@@ -15,7 +15,7 @@ class Dx12GlobalContext : public GlobalContext
 public:
 	Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height);	
 
-	void Run() override;
+	void Run(std::vector<std::pair<std::string, std::string>> modelTexturePaths) override;
 
 	static ID3D12Resource* CreateBufferAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, const void* bufferData);
 	static ID3D12Resource* CreateTextureAsset(D3D12_RESOURCE_DESC* desc, D3D12_RESOURCE_STATES initialState, void* texels);

@@ -74,6 +74,12 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
+	frameBufferWidth = width;
+	frameBufferHeight = height;
+	frameBufferWidthF32 = static_cast<f32>(frameBufferWidth);
+	frameBufferHeightF32 = static_cast<f32>(frameBufferHeight);
+	aspectRatio = frameBufferWidthF32 / frameBufferHeightF32;
+
 	D3D12_CLEAR_VALUE clearValue = {};
 	clearValue.Format = desc.Format;
 	clearValue.DepthStencil.Depth = 1;
@@ -96,36 +102,34 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 
 void Dx12GlobalContext::CreateRootSignatureAndPipelineState(Dx12ShaderBytecode& vertexShader, Dx12ShaderBytecode& pixelShader)
 {
-
 	D3D12_ROOT_PARAMETER rootParameters[2] = {};
 
 	D3D12_DESCRIPTOR_RANGE table1Range[1] = {};
-	{
-		table1Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		table1Range[0].NumDescriptors = 1;
-		table1Range[0].BaseShaderRegister = 0;
-		table1Range[0].RegisterSpace = 0;
-		table1Range[0].OffsetInDescriptorsFromTableStart = 0;
 
-		rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootParameters[0].DescriptorTable.NumDescriptorRanges = ArraySize(table1Range);
-		rootParameters[0].DescriptorTable.pDescriptorRanges = table1Range;
-		rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	}
+	table1Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	table1Range[0].NumDescriptors = 1;
+	table1Range[0].BaseShaderRegister = 0;
+	table1Range[0].RegisterSpace = 0;
+	table1Range[0].OffsetInDescriptorsFromTableStart = 0;
+
+	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[0].DescriptorTable.NumDescriptorRanges = ArraySize(table1Range);
+	rootParameters[0].DescriptorTable.pDescriptorRanges = table1Range;
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	D3D12_DESCRIPTOR_RANGE table2Range[1] = {};
-	{
-		table2Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-		table2Range[0].NumDescriptors = 1;
-		table2Range[0].BaseShaderRegister = 0;
-		table2Range[0].RegisterSpace = 0;
-		table2Range[0].OffsetInDescriptorsFromTableStart = 0;
 
-		rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootParameters[1].DescriptorTable.NumDescriptorRanges = ArraySize(table2Range);
-		rootParameters[1].DescriptorTable.pDescriptorRanges = table2Range;
-		rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	}
+	table2Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	table2Range[0].NumDescriptors = 1;
+	table2Range[0].BaseShaderRegister = 0;
+	table2Range[0].RegisterSpace = 0;
+	table2Range[0].OffsetInDescriptorsFromTableStart = 0;
+
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[1].DescriptorTable.NumDescriptorRanges = ArraySize(table2Range);
+	rootParameters[1].DescriptorTable.pDescriptorRanges = table2Range;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 
 	D3D12_STATIC_SAMPLER_DESC staticSamplerDesc = {};
 	staticSamplerDesc.Filter = D3D12_FILTER_ANISOTROPIC;
@@ -236,7 +240,7 @@ void Dx12GlobalContext::CreateTransformBuffer()
 	device->CreateConstantBufferView(&cbvDesc, cpuDescriptor);
 }
 
-void Dx12GlobalContext::Run()
+void Dx12GlobalContext::Run(std::vector<std::pair<std::string, std::string>> modelTexturePaths)
 {
 	isRunning = true;
 
@@ -246,15 +250,11 @@ void Dx12GlobalContext::Run()
 	LARGE_INTEGER beginTime;
 	QueryPerformanceCounter(&beginTime);
 
-	Model fox = ModelLoader::LoadModelFromFile("./assets/fox/Fox.gltf", "./assets/fox/Texture.png");
-	Model sponza = ModelLoader::LoadModelFromFile("./assets/sponza/Sponza.gltf", "./assets/sponza/textures/");
-	Model marci = ModelLoader::LoadModelFromFile("./assets/marci/scene.gltf", "./assets/marci/");
-
 	std::vector<Dx12Model> models;
-
-	//models.push_back(std::move(fox));
-	models.push_back(std::move(sponza));
-	//models.push_back(std::move(marci));
+	for (const auto& [modelPath, texturePath] : modelTexturePaths)
+	{
+		models.emplace_back(ModelLoader::LoadModelFromFile(modelPath, texturePath));
+	}
 
 	ThrowIfFailed(commandList->Close());
 	commandQueue->ExecuteCommandLists(1, (ID3D12CommandList**)&commandList);
@@ -296,12 +296,12 @@ void Dx12GlobalContext::Run()
 		viewport.MaxDepth = 1;
 		commandList->RSSetViewports(1, &viewport);
 
-		D3D12_RECT ScissorRect = {};
-		ScissorRect.left = 0;
-		ScissorRect.right = frameBufferWidth;
-		ScissorRect.top = 0;
-		ScissorRect.bottom = frameBufferHeight;
-		commandList->RSSetScissorRects(1, &ScissorRect);
+		D3D12_RECT scissorRect = {};
+		scissorRect.left = 0;
+		scissorRect.right = frameBufferWidth;
+		scissorRect.top = 0;
+		scissorRect.bottom = frameBufferHeight;
+		commandList->RSSetScissorRects(1, &scissorRect);
 
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList->SetGraphicsRootSignature(modelRootSignature);
@@ -326,10 +326,10 @@ void Dx12GlobalContext::Run()
 			const auto& meshes = model.GetMeshes();
 			const auto& textureDescriptors = model.GetTextureDescriptors();
 
-			for (const Mesh& m : meshes)
+			for (const Mesh& mesh : meshes)
 			{
-				commandList->SetGraphicsRootDescriptorTable(0, textureDescriptors[m.textureId]);
-				commandList->DrawIndexedInstanced(m.indexCount, 1, m.indexOffset, m.vertexOffset, 0);
+				commandList->SetGraphicsRootDescriptorTable(0, textureDescriptors[mesh.textureId]);
+				commandList->DrawIndexedInstanced(mesh.indexCount, 1, mesh.indexOffset, mesh.vertexOffset, 0);
 			}
 		}
 

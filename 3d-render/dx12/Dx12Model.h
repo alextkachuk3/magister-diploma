@@ -8,7 +8,6 @@
 class Dx12Model
 {
 public:
-	Dx12Model();
 	Dx12Model(const Model& model);
 	Dx12Model(Model&& model);
 

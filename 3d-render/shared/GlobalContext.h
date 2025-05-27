@@ -29,7 +29,7 @@ public:
 	static void SetActiveInstance(GlobalContext* instance);
 	static GlobalContext* GetActiveInstance();
 
-	virtual void Run() = 0;
+	virtual void Run(std::vector<std::pair<std::string, std::string>> modelTexturePaths) = 0;
 	static void Stop();
 	static void Resize(const u32 newWidth, const u32 newHeight);
 

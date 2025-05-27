@@ -1,4 +1,5 @@
 #include "GlobalContext.h"
+#include <Dx12GlobalContext.h>
 
 static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -48,16 +49,6 @@ GlobalContext::GlobalContext(HINSTANCE hInstance, const char* windowTitle, int w
 		nullptr);
 
 	if (!windowHandle) AssertMsg("Failed to create window");
-
-	deviceContext = GetDC(windowHandle);
-
-	RECT clientRect;
-	Assert(GetClientRect(windowHandle, &clientRect));
-	frameBufferWidth = clientRect.right - clientRect.left;
-	frameBufferHeight = clientRect.bottom - clientRect.top;
-	frameBufferWidthF32 = static_cast<f32>(frameBufferWidth);
-	frameBufferHeightF32 = static_cast<f32>(frameBufferHeight);
-	aspectRatio = f32(frameBufferWidth) / f32(frameBufferHeight);
 }
 
 GlobalContext::~GlobalContext()
@@ -101,7 +92,10 @@ void GlobalContext::Resize(const u32 newWidth, const u32 newHeight)
 {
 	if (activeInstance)
 	{
-		activeInstance->ResizeInternal(newWidth, newHeight);
+		if (dynamic_cast<Dx12GlobalContext*>(activeInstance) == nullptr)
+		{
+			activeInstance->ResizeInternal(newWidth, newHeight);
+		}		
 	}
 }
 

@@ -2,13 +2,23 @@
 
 CpuGlobalContext::CpuGlobalContext(HINSTANCE hInstance, const char* windowTitle, int width, int height) : GlobalContext(hInstance, windowTitle, width, height)
 {
+	deviceContext = GetDC(windowHandle);
+
+	RECT clientRect;
+	Assert(GetClientRect(windowHandle, &clientRect));
+	frameBufferWidth = clientRect.right - clientRect.left;
+	frameBufferHeight = clientRect.bottom - clientRect.top;
+	frameBufferWidthF32 = static_cast<f32>(frameBufferWidth);
+	frameBufferHeightF32 = static_cast<f32>(frameBufferHeight);
+	aspectRatio = frameBufferWidthF32 / frameBufferHeightF32;
+
 	samplerType = SamplerType::BilinearFiltration;
 	borderColor = Utils::u32ColorToV3Rgb(Colors::Black);
 	frameBufferPixels = std::make_unique<u32[]>(frameBufferWidth * frameBufferHeight);
 	zBuffer = std::make_unique<f32[]>(frameBufferWidth * frameBufferHeight);
 }
 
-void CpuGlobalContext::Run()
+void CpuGlobalContext::Run(std::vector<std::pair<std::string, std::string>> modelTexturePaths)
 {
 	isRunning = true;
 
@@ -302,7 +312,7 @@ void CpuGlobalContext::DrawTriangle(const ClipVertex& vertex0, const ClipVertex&
 						V3 interploatedColor1 = Utils::Lerp(texelColors[2], texelColors[3], s);
 						V3 color = Utils::Lerp(interploatedColor0, interploatedColor1, k);
 
-						texelColor = Utils::V3RgbToU32Color(color);
+						texelColor = Utils::V3BgrToU32Color(color);
 					} break;
 					}
 

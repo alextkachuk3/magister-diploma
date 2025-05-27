@@ -8,6 +8,12 @@ V3 Utils::u32ColorToV3Rgb(const u32 color)
 		static_cast<f32>((color >> 0) & 0xFF)) / 255.0f;
 }
 
+u32 Utils::V3BgrToU32Color(V3 color)
+{
+	color *= 255.0f;
+	return (static_cast<u32>(0xFF) << 24) | (static_cast<u32>(color.b) << 16) | (static_cast<u32>(color.g) << 8) | static_cast<u32>(color.r);
+}
+
 u32 Utils::V3RgbToU32Color(V3 color)
 {
 	color *= 255.0f;
