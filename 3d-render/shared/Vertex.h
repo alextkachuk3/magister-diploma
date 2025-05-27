@@ -8,5 +8,6 @@ struct Vertex
 {
 	V3 position;
 	V2f uv;
+	V3 normal;
 };
 #pragma pack(pop)

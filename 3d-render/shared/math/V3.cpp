@@ -4,6 +4,11 @@ V3::V3() : x(0.0f), y(0.0f), z(0.0f) {}
 
 V3::V3(f32 X, f32 Y, f32 Z) : x(X), y(Y), z(Z) {}
 
+f32 V3::operator[](int index) const
+{
+	return (&x)[index];
+}
+
 V3 V3::operator-() const
 {
 	return V3(-x, -y, -z);

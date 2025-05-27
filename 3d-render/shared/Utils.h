@@ -26,6 +26,7 @@ namespace Utils
 	V3 Lerp(const V3& A, const V3& B, f32 t);
 	u64 Align(const u64 location, const u64 alignment);
 	u32 Dx12GetBytesPerPixel(DXGI_FORMAT format);
+	f32 Determinant3x3(V3 columnA, V3 columnB, V3 columnC);
 
 	constexpr float DegreesToRadians(float degrees)
 	{

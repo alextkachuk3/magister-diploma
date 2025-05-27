@@ -9,6 +9,8 @@
 #include <Dx12DescriptorHeap.h>
 #include "Dx12ShaderBytecode.h"
 #include "RGBA8.h"
+#include <TransformBuffer.h>
+#include <PhongBuffer.h>
 
 class Dx12GlobalContext : public GlobalContext
 {
@@ -39,6 +41,8 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE depthDescriptor;
 	ID3D12Resource* depthBuffer;
 
+	ID3D12Resource* lightBuffer;
+
 	ID3D12CommandAllocator* commandAllocator;
 
 	ID3D12GraphicsCommandList* commandList;
@@ -59,6 +63,7 @@ private:
 
 	void CreateRootSignatureAndPipelineState(Dx12ShaderBytecode& vertexShader, Dx12ShaderBytecode& pixelShader);
 	void CreateTransformBuffer();
+	void CreateLightBuffer();
 
 	void WaitForGpu();
 	void TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);

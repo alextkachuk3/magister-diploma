@@ -20,6 +20,11 @@ f32 Camera::getPitch() const
 	return pitch;
 }
 
+V3 Camera::getPosition() const
+{
+	return position;
+}
+
 void Camera::UpdateMouseControl(HWND windowHandle)
 {
 	if (GetActiveWindow() != windowHandle)

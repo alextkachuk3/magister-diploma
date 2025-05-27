@@ -10,6 +10,59 @@ M4::M4(const V4& row0, const V4& row1, const V4& row2, const V4& row3)
 	v[3] = row3;
 }
 
+M4 M4::Transpose()
+{
+	M4 result;
+	for (u32 i = 0; i < 4; ++i)
+	{
+		for (u32 j = 0; j < 4; ++j)
+		{
+			result[i][j] = (*this)[j][i];
+		}
+	}
+	return result;
+}
+
+f32 M4::Determinant()
+{
+	return
+		v[0][0] * Utils::Determinant3x3(v[1].yzw, v[2].yzw, v[3].yzw) -
+		v[0][1] * Utils::Determinant3x3(V3(v[1].x, v[2].x, v[3].x), V3(v[1].z, v[2].z, v[3].z), V3(v[1].w, v[2].w, v[3].w)) +
+		v[0][2] * Utils::Determinant3x3(V3(v[1].x, v[2].x, v[3].x), V3(v[1].y, v[2].y, v[3].y), V3(v[1].w, v[2].w, v[3].w)) -
+		v[0][3] * Utils::Determinant3x3(v[1].xyz, v[2].xyz, v[3].xyz);
+}
+
+M4 M4::Inverse()
+{
+	f32 det = Determinant();
+	Assert(det != 0.0f);
+	f32 invDet = 1.0f / det;
+
+	M4 result;
+
+	result[0][0] = +Utils::Determinant3x3(v[1].yzw, v[2].yzw, v[3].yzw) * invDet;
+	result[0][1] = -Utils::Determinant3x3(v[0].yzw, v[2].yzw, v[3].yzw) * invDet;
+	result[0][2] = +Utils::Determinant3x3(v[0].yzw, v[1].yzw, v[3].yzw) * invDet;
+	result[0][3] = -Utils::Determinant3x3(v[0].yzw, v[1].yzw, v[2].yzw) * invDet;
+
+	result[1][0] = -Utils::Determinant3x3(V3(v[1].x, v[2].x, v[3].x), V3(v[1].z, v[2].z, v[3].z), V3(v[1].w, v[2].w, v[3].w)) * invDet;
+	result[1][1] = +Utils::Determinant3x3(V3(v[0].x, v[2].x, v[3].x), V3(v[0].z, v[2].z, v[3].z), V3(v[0].w, v[2].w, v[3].w)) * invDet;
+	result[1][2] = -Utils::Determinant3x3(V3(v[0].x, v[1].x, v[3].x), V3(v[0].z, v[1].z, v[3].z), V3(v[0].w, v[1].w, v[3].w)) * invDet;
+	result[1][3] = +Utils::Determinant3x3(V3(v[0].x, v[1].x, v[2].x), V3(v[0].z, v[1].z, v[2].z), V3(v[0].w, v[1].w, v[2].w)) * invDet;
+
+	result[2][0] = +Utils::Determinant3x3(V3(v[1].x, v[2].x, v[3].x), V3(v[1].y, v[2].y, v[3].y), V3(v[1].w, v[2].w, v[3].w)) * invDet;
+	result[2][1] = -Utils::Determinant3x3(V3(v[0].x, v[2].x, v[3].x), V3(v[0].y, v[2].y, v[3].y), V3(v[0].w, v[2].w, v[3].w)) * invDet;
+	result[2][2] = +Utils::Determinant3x3(V3(v[0].x, v[1].x, v[3].x), V3(v[0].y, v[1].y, v[3].y), V3(v[0].w, v[1].w, v[3].w)) * invDet;
+	result[2][3] = -Utils::Determinant3x3(V3(v[0].x, v[1].x, v[2].x), V3(v[0].y, v[1].y, v[2].y), V3(v[0].w, v[1].w, v[2].w)) * invDet;
+
+	result[3][0] = -Utils::Determinant3x3(v[1].xyz, v[2].xyz, v[3].xyz) * invDet;
+	result[3][1] = +Utils::Determinant3x3(v[0].xyz, v[2].xyz, v[3].xyz) * invDet;
+	result[3][2] = -Utils::Determinant3x3(v[0].xyz, v[1].xyz, v[3].xyz) * invDet;
+	result[3][3] = +Utils::Determinant3x3(v[0].xyz, v[1].xyz, v[2].xyz) * invDet;
+
+	return result.Transpose();
+}
+
 M4 M4::Identity()
 {
 	return M4(
@@ -79,6 +132,11 @@ M4 M4::Perspective(const f32 aspectRatio, const f32 fov, const f32 nearZ, const 
 			V4(0.0f, 0.0f, -farZ / (nearZ - farZ), 1.0f),
 			V4(0.0f, 0.0f, nearZ * farZ / (nearZ - farZ), 0.0f)
 		);
+}
+
+V4& M4::operator[](const u32 index)
+{
+	return v[index];
 }
 
 V4 M4::operator*(const V4& B) const

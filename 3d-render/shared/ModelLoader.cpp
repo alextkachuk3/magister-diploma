@@ -62,6 +62,11 @@ Model ModelLoader::LoadModelFromFile(const std::string& modelPath, const std::st
             else
                 vertex.uv = V2f(0.0f, 0.0f);
 
+            if (aiMeshPtr->HasNormals())
+                vertex.normal = ConvertVector(aiMeshPtr->mNormals[i]);
+            else
+                vertex.normal = V3(0.0f, 1.0f, 0.0f);
+
             model.vertices.push_back(vertex);
         }
 

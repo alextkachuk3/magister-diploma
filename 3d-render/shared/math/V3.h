@@ -30,11 +30,10 @@ union V3
 		V2f yz;
 	};
 
-	f32 e[3];
-
 	V3();
 	V3(f32 X, f32 Y, f32 Z);
 
+	f32 operator[](int index) const;
 	V3 operator-() const;
 	V3 operator+(const V3& other) const;
 	V3 operator-(const V3& other) const;

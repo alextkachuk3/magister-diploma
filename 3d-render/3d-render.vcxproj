@@ -144,6 +144,8 @@
     <ClInclude Include="dx12\Dx12PlacementHeap.h" />
     <ClInclude Include="dx12\Dx12ShaderBytecode.h" />
     <ClInclude Include="dx12\Dx12UploadBuffer.h" />
+    <ClInclude Include="dx12\PhongBuffer.h" />
+    <ClInclude Include="dx12\TransformBuffer.h" />
     <ClInclude Include="shared\Camera.h" />
     <ClInclude Include="shared\Colors.h" />
     <ClInclude Include="shared\Constants.h" />

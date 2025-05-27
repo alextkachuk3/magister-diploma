@@ -8,6 +8,11 @@ V4::V4(const V3& v3, const f32 W) : x(v3.x), y(v3.y), z(v3.z), w(W) {}
 
 V4::V4(const V3& v3) : x(v3.x), y(v3.y), z(v3.z), w(1.0f) {}
 
+f32& V4::operator[](const u32 index)
+{
+	return (index == 0) ? x : (index == 1) ? y : (index == 2) ? z : w;
+}
+
 V4 V4::operator+(const V4& B) const
 {
 	return V4(x + B.x, y + B.y, z + B.z, w + B.w);

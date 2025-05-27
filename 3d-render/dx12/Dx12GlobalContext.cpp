@@ -98,6 +98,7 @@ Dx12GlobalContext::Dx12GlobalContext(HINSTANCE hInstance, const char* windowTitl
 
 	CreateRootSignatureAndPipelineState(vertexShader, pixelShader);
 	CreateTransformBuffer();
+	CreateLightBuffer();
 }
 
 void Dx12GlobalContext::CreateRootSignatureAndPipelineState(Dx12ShaderBytecode& vertexShader, Dx12ShaderBytecode& pixelShader)
@@ -120,7 +121,7 @@ void Dx12GlobalContext::CreateRootSignatureAndPipelineState(Dx12ShaderBytecode& 
 	D3D12_DESCRIPTOR_RANGE table2Range[1] = {};
 
 	table2Range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	table2Range[0].NumDescriptors = 1;
+	table2Range[0].NumDescriptors = 2;
 	table2Range[0].BaseShaderRegister = 0;
 	table2Range[0].RegisterSpace = 0;
 	table2Range[0].OffsetInDescriptorsFromTableStart = 0;
@@ -190,7 +191,7 @@ void Dx12GlobalContext::CreateRootSignatureAndPipelineState(Dx12ShaderBytecode& 
 	desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -204,6 +205,13 @@ void Dx12GlobalContext::CreateRootSignatureAndPipelineState(Dx12ShaderBytecode& 
 	inputElementDescs[1].InputSlot = 0;
 	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	inputElementDescs[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+
+	inputElementDescs[2].SemanticName = "NORMAL";
+	inputElementDescs[2].SemanticIndex = 0;
+	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElementDescs[2].InputSlot = 0;
+	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[2].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 
 	desc.InputLayout.pInputElementDescs = inputElementDescs;
 	desc.InputLayout.NumElements = ArraySize(inputElementDescs);
@@ -221,7 +229,7 @@ void Dx12GlobalContext::CreateTransformBuffer()
 {
 	D3D12_RESOURCE_DESC desc = {};
 	desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	desc.Width = Utils::Align(sizeof(M4), 256);
+	desc.Width = Utils::Align(sizeof(TransformBuffer), 256);
 	desc.Height = 1;
 	desc.DepthOrArraySize = 1;
 	desc.MipLevels = 1;
@@ -237,6 +245,28 @@ void Dx12GlobalContext::CreateTransformBuffer()
 
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor = {};
 	DescriptorAllocate(&shaderDescriptorHeap, &cpuDescriptor, &transformDescriptor);
+	device->CreateConstantBufferView(&cbvDesc, cpuDescriptor);
+}
+
+void Dx12GlobalContext::CreateLightBuffer()
+{
+	D3D12_RESOURCE_DESC desc = {};
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	desc.Width = Utils::Align(sizeof(PhongBuffer), 256);
+	desc.Height = 1;
+	desc.DepthOrArraySize = 1;
+	desc.MipLevels = 1;
+	desc.Format = DXGI_FORMAT_UNKNOWN;
+	desc.SampleDesc.Count = 1;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	lightBuffer = CreateResource(&bufferPlacement, &desc, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, 0);
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+	cbvDesc.BufferLocation = lightBuffer->GetGPUVirtualAddress();
+	cbvDesc.SizeInBytes = desc.Width;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor = {};
+	DescriptorAllocate(&shaderDescriptorHeap, &cpuDescriptor, 0);
 	device->CreateConstantBufferView(&cbvDesc, cpuDescriptor);
 }
 
@@ -266,6 +296,8 @@ void Dx12GlobalContext::Run(std::vector<std::pair<std::string, std::string>> mod
 
 	ClearUploadBuffer(&uploadBuffer);
 
+	f32 Time = 0.0f;
+
 	while (isRunning)
 	{
 		LARGE_INTEGER endTime;
@@ -275,15 +307,42 @@ void Dx12GlobalContext::Run(std::vector<std::pair<std::string, std::string>> mod
 
 		frameTimeLogger.LogFrameTime(frameTime);
 
-		TransitionResource(frameBuffers[currentFrameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		M4 WTransform = M4::Translation(0.0f, 0.0f, 1.0f) * M4::Rotation(0.0f, 0.0f, 0.0f) * M4::Scale(0.1f, 0.1f, 0.1f);
+
+		M4 WVPTransform = (M4::Perspective(Utils::DegreesToRadians(90.0f), aspectRatio, 0.01f, 1000.0f) * camera.getCameraTransformMatrix() * WTransform);
+
+		TransformBuffer transformBufferCPU = {};
+		transformBufferCPU.WTransform = WTransform;
+		transformBufferCPU.WVPTransform = WVPTransform;
+		transformBufferCPU.NormalWTransform = WTransform.Inverse();
+		transformBufferCPU.Shininess = 4.0f;
+		transformBufferCPU.SpecularStrength = 1.0f;
+
+		CopyDataToBuffer(D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &transformBufferCPU, sizeof(transformBufferCPU), transformBuffer);
+				
+		Time += frameTime;
+		if (Time > 2.0f * Constants::PI)
+		{
+			Time -= 2.0f * Constants::PI;
+		}
+
+		PhongBuffer PhongBufferCPU = {};
+		PhongBufferCPU.LightAmbientIntensity = 0.4f;
+		PhongBufferCPU.LightColor = V3(1.0f, 0.9f, 0.1f);
+		PhongBufferCPU.LightDirection = V3::Normalize(V3(-1.0f, cos(Time), 0.0f));
+		PhongBufferCPU.CameraPos = camera.getPosition();
+		CopyDataToBuffer(
+			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+			&PhongBufferCPU,
+			sizeof(PhongBufferCPU),
+			lightBuffer);
+
+		TransitionResource(frameBuffers[currentFrameIndex], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);		
 
 		const FLOAT color[4] = { 1, 0, 1, 1 };
 		commandList->ClearRenderTargetView(frameBufferDescriptors[currentFrameIndex], color, 0, nullptr);
 		commandList->ClearDepthStencilView(depthDescriptor, D3D12_CLEAR_FLAG_DEPTH, 1, 0, 0, nullptr);
-
-		M4 transform = M4::Perspective(aspectRatio, Utils::DegreesToRadians(90.0f), 0.01f, 2000.0f) * camera.getCameraTransformMatrix() * M4::Translation(0.0f, 0.0f, 10.0f) * M4::Rotation(0.0f, 0.0f, 0.0f) * M4::Scale(0.1f, 0.1f, 0.1f);
-
-		CopyDataToBuffer(D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &transform, sizeof(M4), transformBuffer);
 
 		commandList->OMSetRenderTargets(1, frameBufferDescriptors + currentFrameIndex, 0, &depthDescriptor);
 
@@ -440,7 +499,7 @@ ID3D12Resource* Dx12GlobalContext::CreateTextureAssetInternal(D3D12_RESOURCE_DES
 
 	u64 bytesPerPixel = Utils::Dx12GetBytesPerPixel(desc->Format);
 
-	RGBA8* mipMemory = desc->MipLevels > 1 ? (RGBA8*)malloc(uploadSize) : 0;
+	RGBA8* mipMemory = desc->MipLevels > 1 ? new RGBA8[uploadSize] : nullptr;
 
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT* currFootPrint = mipFootPrints + 0;
 
@@ -497,7 +556,7 @@ ID3D12Resource* Dx12GlobalContext::CreateTextureAssetInternal(D3D12_RESOURCE_DES
 
 	if (mipMemory)
 	{
-		free(mipMemory);
+		delete(mipMemory);
 	}
 
 	ID3D12Resource* result = CreateResource(&texturePlacement, desc, D3D12_RESOURCE_STATE_COPY_DEST, 0);

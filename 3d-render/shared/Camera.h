@@ -12,6 +12,7 @@ public:
 
 	f32 getYaw() const;
 	f32 getPitch() const;
+	V3 getPosition() const;
 
 	void UpdateMouseControl(HWND windowHandle);
 	void UpdateViewMatrix(f32 frameTime, bool wPressed, bool aPressed, bool sPressed, bool dPressed);

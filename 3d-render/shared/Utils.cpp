@@ -109,6 +109,12 @@ u32 Utils::Dx12GetBytesPerPixel(DXGI_FORMAT format)
 	return result;
 }
 
+f32 Utils::Determinant3x3(V3 columnA, V3 columnB, V3 columnC)
+{
+	return (columnA[0] * columnB[1] * columnC[2] + columnB[0] * columnC[1] * columnA[2] + columnC[0] * columnA[1] * columnB[2] -
+		columnC[0] * columnB[1] * columnA[2] - columnB[0] * columnA[1] * columnC[2] - columnA[0] * columnC[1] * columnB[2]);
+}
+
 void ThrowIfFailed(HRESULT result)
 {
 	if (result != S_OK)
